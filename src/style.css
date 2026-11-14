@@ -9,16 +9,26 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #1b1b24;
+    background: #0b0a10;
 }
 
 body {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Prevent scrolling / zooming gestures from interfering with touch controls. */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #game {
     width: 100%;
     height: 100%;
+}
+
+#game canvas {
+    /* Keep pixel art sharp when the canvas is scaled to the window. */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }

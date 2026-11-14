@@ -1,0 +1,43 @@
+import { DIFFICULTY_SETTINGS } from '../data/gameConfig.js';
+import { SaveManager } from './SaveManager.js';
+
+/**
+ * State shared between scenes for the current play session: the selected
+ * difficulty and the result of the last game. Persistent data lives in
+ * SaveManager; this object only lives while the page is open.
+ */
+class GameSessionClass {
+    constructor() {
+        this.difficulty = SaveManager.getLastDifficulty();
+        this.lastResult = null;
+    }
+
+    setDifficulty(difficulty) {
+        if (!DIFFICULTY_SETTINGS[difficulty]) {
+            throw new Error(`Unknown difficulty "${difficulty}".`);
+        }
+        this.difficulty = difficulty;
+        SaveManager.setLastDifficulty(difficulty);
+    }
+
+    getDifficultySettings() {
+        return DIFFICULTY_SETTINGS[this.difficulty];
+    }
+
+    /** Stores the outcome of a finished game and updates persistent records. */
+    finishGame({ won, score, maxScore, reason = null }) {
+        const { newHighScore } = SaveManager.recordResult({ score, difficulty: this.difficulty, won });
+        this.lastResult = {
+            won,
+            score,
+            maxScore,
+            reason,
+            difficulty: this.difficulty,
+            newHighScore,
+            highScore: SaveManager.getHighScore()
+        };
+        return this.lastResult;
+    }
+}
+
+export const GameSession = new GameSessionClass();

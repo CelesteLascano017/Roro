@@ -1,0 +1,408 @@
+import { SimpleEmitter } from '../utils/SimpleEmitter.js';
+import { DETECTIVE_CONFIG, DISTRACTION_CONFIG } from '../data/gameConfig.js';
+
+export const DETECTIVE_STATE = Object.freeze({
+    WAITING: 'waiting',
+    ENTERING: 'entering',
+    INSPECTING: 'inspecting',
+    INTERVIEWING: 'interviewing',
+    REDIRECTED: 'redirected',
+    RETURNING: 'returning',
+    FINISHED: 'finished',
+    CAUGHT: 'caught'
+});
+
+/**
+ * Transition table. A transition not listed here is rejected and logged.
+ *
+ *   WAITING ──start──▶ ENTERING ──entry pause over──▶ INSPECTING
+ *   INSPECTING ──route done (routes 1-3)──▶ INTERVIEWING ──dialogue over──▶ INSPECTING (next route)
+ *   INSPECTING ──route 4 done──▶ FINISHED
+ *   INSPECTING ──decisive evidence found──▶ CAUGHT
+ *   INSPECTING / RETURNING ──distraction──▶ REDIRECTED ──investigation over──▶ RETURNING ──back on route──▶ INSPECTING
+ *   REDIRECTED ──decisive evidence found near the distraction──▶ CAUGHT
+ */
+export const DETECTIVE_TRANSITIONS = Object.freeze({
+    [DETECTIVE_STATE.WAITING]: [DETECTIVE_STATE.ENTERING],
+    [DETECTIVE_STATE.ENTERING]: [DETECTIVE_STATE.INSPECTING],
+    [DETECTIVE_STATE.INSPECTING]: [DETECTIVE_STATE.INTERVIEWING, DETECTIVE_STATE.REDIRECTED, DETECTIVE_STATE.FINISHED, DETECTIVE_STATE.CAUGHT],
+    [DETECTIVE_STATE.INTERVIEWING]: [DETECTIVE_STATE.INSPECTING],
+    [DETECTIVE_STATE.REDIRECTED]: [DETECTIVE_STATE.RETURNING, DETECTIVE_STATE.CAUGHT],
+    [DETECTIVE_STATE.RETURNING]: [DETECTIVE_STATE.INSPECTING, DETECTIVE_STATE.REDIRECTED],
+    [DETECTIVE_STATE.FINISHED]: [],
+    [DETECTIVE_STATE.CAUGHT]: []
+});
+
+export const DETECTIVE_EVENTS = Object.freeze({
+    STATE_CHANGED: 'stateChanged',
+    ROUTE_STARTED: 'routeStarted',
+    INSPECTION_STARTED: 'inspectionStarted',
+    INSPECTION_FINISHED: 'inspectionFinished',
+    INTERVIEW_REQUESTED: 'interviewRequested',
+    DISTRACTED: 'distracted',
+    EVIDENCE_DISCOVERED: 'evidenceDiscovered',
+    VISIT_FINISHED: 'visitFinished',
+    TRANSITION_REJECTED: 'transitionRejected'
+});
+
+/**
+ * Finite state machine that drives the detective.
+ *
+ * The FSM decides WHAT the detective does; the Detective game object decides
+ * HOW (path following, doors, animation). They communicate through a small
+ * interface, which keeps this class free of Phaser and testable in Node:
+ *
+ *   detective.navigateTo(position, { onArrive, onFail })
+ *   detective.stop()
+ *   detective.getPosition()
+ *   detective.setSpeedMultiplier(multiplier)
+ *   detective.faceTowards(position)
+ *   detective.setSearching(isSearching)
+ *
+ * Timers are advanced by `update(delta)`, so pausing the scene pauses the FSM.
+ */
+export class DetectiveStateMachine extends SimpleEmitter {
+    /**
+     * @param {object} deps
+     * @param {object} deps.detective movement interface (see above)
+     * @param {import('../managers/InspectionManager.js').InspectionManager} deps.inspection
+     * @param {import('../managers/EvidenceManager.js').EvidenceManager} deps.evidence
+     * @param {() => {x:number,y:number}} deps.getPlayerPosition
+     * @param {{ entry: {x,y}, exit: {x,y} }} deps.positions world positions
+     * @param {{ closeFrontDoor: Function }} deps.doors
+     * @param {object} [deps.config]
+     */
+    constructor({ detective, inspection, evidence, getPlayerPosition, positions, doors, config = DETECTIVE_CONFIG, distractionConfig = DISTRACTION_CONFIG }) {
+        super();
+        this.detective = detective;
+        this.inspection = inspection;
+        this.evidence = evidence;
+        this.getPlayerPosition = getPlayerPosition;
+        this.positions = positions;
+        this.doors = doors;
+        this.config = config;
+        this.distractionConfig = distractionConfig;
+
+        this.state = DETECTIVE_STATE.WAITING;
+        this.previousState = null;
+        // Incremented on every transition; callbacks from an older state are ignored.
+        this.stateToken = 0;
+        // Data used by the current state (phase, timers, targets).
+        this.context = {};
+        this.history = [DETECTIVE_STATE.WAITING];
+
+        this.handlers = {
+            [DETECTIVE_STATE.WAITING]: {},
+            [DETECTIVE_STATE.ENTERING]: {
+                enter: () => this.enterEntering(),
+                update: (delta) => this.updateEntering(delta)
+            },
+            [DETECTIVE_STATE.INSPECTING]: {
+                enter: (payload) => this.enterInspecting(payload),
+                update: (delta) => this.updateInspecting(delta),
+                exit: () => this.detective.setSearching(false)
+            },
+            [DETECTIVE_STATE.INTERVIEWING]: {
+                enter: (payload) => this.enterInterviewing(payload),
+                update: (delta) => this.updateInterviewing(delta)
+            },
+            [DETECTIVE_STATE.REDIRECTED]: {
+                enter: (payload) => this.enterRedirected(payload),
+                update: (delta) => this.updateRedirected(delta),
+                exit: () => this.detective.setSearching(false)
+            },
+            [DETECTIVE_STATE.RETURNING]: {
+                enter: () => this.enterReturning()
+            },
+            [DETECTIVE_STATE.FINISHED]: {
+                enter: () => this.enterFinished()
+            },
+            [DETECTIVE_STATE.CAUGHT]: {
+                enter: (payload) => this.enterCaught(payload)
+            }
+        };
+    }
+
+    // ------------------------------------------------------------- framework
+
+    canTransition(nextState) {
+        return DETECTIVE_TRANSITIONS[this.state].includes(nextState);
+    }
+
+    transition(nextState, payload = {}) {
+        if (!this.canTransition(nextState)) {
+            this.emit(DETECTIVE_EVENTS.TRANSITION_REJECTED, { from: this.state, to: nextState });
+            return false;
+        }
+        this.handlers[this.state].exit?.();
+        this.previousState = this.state;
+        this.state = nextState;
+        this.stateToken += 1;
+        this.context = {};
+        this.history.push(nextState);
+        this.emit(DETECTIVE_EVENTS.STATE_CHANGED, { from: this.previousState, to: nextState, payload });
+        this.handlers[nextState].enter?.(payload);
+        return true;
+    }
+
+    /** Wraps a callback so it only runs if the state has not changed since. */
+    guard(callback) {
+        const token = this.stateToken;
+        return (...args) => {
+            if (token === this.stateToken) {
+                callback(...args);
+            }
+        };
+    }
+
+    navigate(position, onArrive, onFail) {
+        this.detective.navigateTo(position, {
+            onArrive: this.guard(onArrive),
+            onFail: this.guard(onFail ?? onArrive)
+        });
+    }
+
+    update(delta) {
+        this.handlers[this.state].update?.(delta);
+    }
+
+    isActive() {
+        return this.state !== DETECTIVE_STATE.FINISHED && this.state !== DETECTIVE_STATE.CAUGHT;
+    }
+
+    // --------------------------------------------------------- external events
+
+    /** Starts the visit (after the knock / introduction). */
+    start() {
+        return this.transition(DETECTIVE_STATE.ENTERING);
+    }
+
+    /**
+     * A distraction made a noise. Only interrupts inspection or the walk back
+     * to the route; interviews, entering and leaving are not interrupted.
+     */
+    notifyDistraction(distraction) {
+        if (this.state !== DETECTIVE_STATE.INSPECTING && this.state !== DETECTIVE_STATE.RETURNING) {
+            return false;
+        }
+        return this.transition(DETECTIVE_STATE.REDIRECTED, { distraction });
+    }
+
+    /** Called by the scene when the interview dialogue has been read. */
+    completeInterview() {
+        if (this.state !== DETECTIVE_STATE.INTERVIEWING || this.context.phase !== 'talking') {
+            return false;
+        }
+        return this.transition(DETECTIVE_STATE.INSPECTING, { routeIndex: this.context.interviewIndex + 1 });
+    }
+
+    // ----------------------------------------------------------------- states
+
+    enterEntering() {
+        this.context.phase = 'walking';
+        // The detective opens the front door himself when his path reaches it.
+        this.navigate(this.positions.entry, () => {
+            this.context.phase = 'lookingAround';
+            this.context.timer = this.config.entryPause;
+            this.detective.stop();
+            this.detective.setSearching(true);
+        });
+    }
+
+    updateEntering(delta) {
+        if (this.context.phase !== 'lookingAround') {
+            return;
+        }
+        this.context.timer -= delta;
+        if (this.context.timer <= 0) {
+            this.detective.setSearching(false);
+            this.doors.closeFrontDoor();
+            this.transition(DETECTIVE_STATE.INSPECTING, { routeIndex: 0 });
+        }
+    }
+
+    enterInspecting(payload) {
+        if (payload.routeIndex !== undefined) {
+            this.inspection.startRoute(payload.routeIndex);
+            const route = this.inspection.getRoute();
+            this.detective.setSpeedMultiplier(route.speedMultiplier);
+            this.emit(DETECTIVE_EVENTS.ROUTE_STARTED, { route, progress: this.inspection.getProgress() });
+        }
+        this.travelToCurrentPoint();
+    }
+
+    travelToCurrentPoint() {
+        const point = this.inspection.getCurrentPoint();
+        if (!point) {
+            this.finishRoute();
+            return;
+        }
+        this.context.phase = 'travelling';
+        this.context.point = point;
+        this.navigate(point.position,
+            () => this.beginSearch(point),
+            () => {
+                // Unreachable right now: skip this point rather than freezing.
+                this.inspection.completeCurrentPoint();
+                this.travelToCurrentPoint();
+            });
+    }
+
+    beginSearch(point) {
+        this.context.phase = 'searching';
+        this.context.timer = this.inspection.getRoute().inspectDuration;
+        this.detective.stop();
+        if (point.hidingSpot) {
+            this.detective.faceTowards(point.hidingSpot.position);
+        }
+        this.detective.setSearching(true);
+        this.emit(DETECTIVE_EVENTS.INSPECTION_STARTED, { point });
+    }
+
+    updateInspecting(delta) {
+        if (this.context.phase !== 'searching') {
+            return;
+        }
+        this.context.timer -= delta;
+        if (this.context.timer > 0) {
+            return;
+        }
+
+        const point = this.context.point;
+        this.detective.setSearching(false);
+        const discoveries = this.evidence.findDiscoverable({
+            hidingSpot: point.hidingSpot,
+            position: point.position,
+            lookRadius: point.lookRadius,
+            room: point.room
+        });
+
+        if (this.handleDiscoveries(discoveries, point)) {
+            return;
+        }
+
+        this.inspection.completeCurrentPoint();
+        this.emit(DETECTIVE_EVENTS.INSPECTION_FINISHED, { point, progress: this.inspection.getProgress() });
+        this.travelToCurrentPoint();
+    }
+
+    /**
+     * Marks discovered evidence. Returns true when a decisive object was
+     * found (the FSM has then moved to CAUGHT).
+     */
+    handleDiscoveries(discoveries, point) {
+        if (discoveries.length === 0) {
+            return false;
+        }
+        discoveries.forEach(({ item }) => this.evidence.markDiscovered(item.id));
+        const decisive = discoveries.filter(({ item }) => item.definition.decisive);
+        if (decisive.length > 0) {
+            this.transition(DETECTIVE_STATE.CAUGHT, { discoveries: decisive, point });
+            return true;
+        }
+        return false;
+    }
+
+    finishRoute() {
+        if (this.inspection.hasNextRoute()) {
+            this.transition(DETECTIVE_STATE.INTERVIEWING, { interviewIndex: this.inspection.routeIndex });
+        } else {
+            this.transition(DETECTIVE_STATE.FINISHED);
+        }
+    }
+
+    enterInterviewing({ interviewIndex }) {
+        this.context.interviewIndex = interviewIndex;
+        this.context.phase = 'approaching';
+        this.context.repathTimer = 0;
+        this.context.elapsed = 0;
+    }
+
+    updateInterviewing(delta) {
+        if (this.context.phase !== 'approaching') {
+            return;
+        }
+        this.context.elapsed += delta;
+        const playerPosition = this.getPlayerPosition();
+        const position = this.detective.getPosition();
+        const distance = Math.hypot(playerPosition.x - position.x, playerPosition.y - position.y);
+
+        if (distance <= this.config.interviewDistance || this.context.elapsed >= this.config.interviewFallbackTimeout) {
+            this.context.phase = 'talking';
+            this.detective.stop();
+            this.detective.faceTowards(playerPosition);
+            this.emit(DETECTIVE_EVENTS.INTERVIEW_REQUESTED, { interviewIndex: this.context.interviewIndex });
+            return;
+        }
+
+        // Roro moves, so the path towards Roro is recalculated regularly.
+        this.context.repathTimer -= delta;
+        if (this.context.repathTimer <= 0) {
+            this.context.repathTimer = this.config.chaseRepathInterval;
+            this.navigate(playerPosition, () => {}, () => {});
+        }
+    }
+
+    enterRedirected({ distraction }) {
+        this.context.distraction = distraction;
+        this.context.phase = 'travelling';
+        this.emit(DETECTIVE_EVENTS.DISTRACTED, { distraction });
+        this.navigate(distraction.investigatePosition,
+            () => {
+                this.context.phase = 'investigating';
+                this.context.timer = this.distractionConfig.investigateDuration;
+                this.detective.stop();
+                this.detective.faceTowards(distraction.position);
+                this.detective.setSearching(true);
+            },
+            () => this.transition(DETECTIVE_STATE.RETURNING));
+    }
+
+    updateRedirected(delta) {
+        if (this.context.phase !== 'investigating') {
+            return;
+        }
+        this.context.timer -= delta;
+        if (this.context.timer > 0) {
+            return;
+        }
+        const distraction = this.context.distraction;
+        const discoveries = this.evidence.findDiscoverable({
+            position: distraction.investigatePosition,
+            lookRadius: this.inspection.getRoute()?.lookRadius ?? 64,
+            room: distraction.room
+        });
+        if (this.handleDiscoveries(discoveries, { label: distraction.name, room: distraction.room })) {
+            return;
+        }
+        this.transition(DETECTIVE_STATE.RETURNING);
+    }
+
+    enterReturning() {
+        const point = this.inspection.getCurrentPoint();
+        if (!point) {
+            this.transition(DETECTIVE_STATE.INSPECTING);
+            return;
+        }
+        // The route was never erased: the detective walks back to the point he
+        // was heading to (or searching) and resumes from there.
+        this.navigate(point.position,
+            () => this.transition(DETECTIVE_STATE.INSPECTING, { resumed: true }),
+            () => this.transition(DETECTIVE_STATE.INSPECTING, { resumed: true }));
+    }
+
+    enterFinished() {
+        this.detective.setSpeedMultiplier(1);
+        this.navigate(this.positions.exit, () => {
+            this.detective.stop();
+            this.doors.closeFrontDoor();
+            this.emit(DETECTIVE_EVENTS.VISIT_FINISHED, {});
+        });
+    }
+
+    enterCaught({ discoveries, point }) {
+        this.detective.stop();
+        this.detective.faceTowards(this.getPlayerPosition());
+        this.emit(DETECTIVE_EVENTS.EVIDENCE_DISCOVERED, { discoveries, point });
+    }
+}

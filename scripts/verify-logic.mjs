@@ -1,0 +1,421 @@
+/**
+ * Automated checks of the game logic that does not depend on Phaser:
+ * level data validity, navigation, evidence scoring rules, inspection routes
+ * and the detective finite state machine.
+ *
+ * Run with: npm test
+ */
+import { ApartmentLayout } from '../src/world/ApartmentLayout.js';
+import { NavigationManager } from '../src/physics/NavigationManager.js';
+import { EvidenceManager } from '../src/managers/EvidenceManager.js';
+import { InspectionManager } from '../src/managers/InspectionManager.js';
+import { HidingSpot } from '../src/objects/HidingSpot.js';
+import { DetectiveStateMachine, DETECTIVE_EVENTS, DETECTIVE_STATE } from '../src/ai/DetectiveStateMachine.js';
+import { createSeededRandom } from '../src/utils/random.js';
+import {
+    BELONGING_SPAWN_POINTS,
+    DISTRACTIONS,
+    FIXED_SPAWN_POINTS,
+    HIDING_CATEGORY,
+    HIDING_SPOTS,
+    KEY_TILES
+} from '../src/data/apartmentData.js';
+import { EVIDENCE_ITEMS, EVIDENCE_STATE } from '../src/data/evidenceData.js';
+import { INSPECTION_ROUTES, ROOM_SWEEP_POINTS } from '../src/data/detectiveRoutes.js';
+import { DETECTIVE_CONFIG, HIDING_RULES, PLAYER_CONFIG, SCORE_CONFIG } from '../src/data/gameConfig.js';
+
+let passed = 0;
+let failed = 0;
+
+function check(name, condition, details = '') {
+    if (condition) {
+        passed += 1;
+        console.log(`  ok   ${name}`);
+    } else {
+        failed += 1;
+        console.log(`  FAIL ${name}${details ? ` -> ${details}` : ''}`);
+    }
+}
+
+function section(title) {
+    console.log(`\n${title}`);
+}
+
+const layout = new ApartmentLayout();
+const navigation = new NavigationManager(layout, { clearance: DETECTIVE_CONFIG.bodyWidth / 2 + 2 });
+const insideTile = KEY_TILES.roroStart;
+
+function createHidingSpots() {
+    return HIDING_SPOTS.map((definition) => new HidingSpot(definition, {
+        position: layout.tilePointToWorld(definition.point),
+        inspectPosition: layout.tileCenter(definition.inspectTile)
+    }, HIDING_RULES.hidingSpotCapacity));
+}
+
+/** True if some walkable tile centre reachable from Roro's start is within the interaction range of `point`. */
+function isInteractable(point, range = PLAYER_CONFIG.interactionRange) {
+    const world = layout.tilePointToWorld(point);
+    for (let y = 0; y < layout.height; y++) {
+        for (let x = 0; x < layout.width; x++) {
+            if (!layout.isWalkable(x, y)) continue;
+            const centre = layout.tileCenter({ x, y });
+            if (Math.hypot(centre.x - world.x, centre.y - world.y) <= range && navigation.isReachable(insideTile, { x, y })) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// ---------------------------------------------------------------------------
+section('Level data');
+
+for (const room of layout.rooms) {
+    const centre = { x: room.rect.x + Math.floor(room.rect.w / 2), y: room.rect.y + Math.floor(room.rect.h / 2) };
+    const target = navigation.findNearestWalkable(centre);
+    check(`room "${room.id}" is reachable from the apartment`, target && navigation.isReachable(insideTile, target));
+}
+
+for (const door of layout.doors) {
+    const tile = { x: door.rect.x, y: door.rect.y };
+    check(`door "${door.id}" tiles are walkable for navigation`, layout.isWalkable(tile.x, tile.y));
+}
+
+for (const [name, tile] of Object.entries(KEY_TILES)) {
+    check(`key tile "${name}" is walkable and reachable`, layout.isWalkable(tile.x, tile.y) && navigation.isReachable(insideTile, tile));
+}
+
+for (const point of [...BELONGING_SPAWN_POINTS, ...Object.values(FIXED_SPAWN_POINTS).map((p, i) => ({ ...p, id: `fixed${i}` }))]) {
+    const tile = { x: Math.floor(point.x), y: Math.floor(point.y) };
+    const walkable = layout.isWalkable(tile.x, tile.y);
+    const room = layout.getRoomIdAtTile(tile.x, tile.y);
+    check(`spawn "${point.id}" is on a walkable tile in room ${point.room}`, walkable && room === point.room && navigation.isReachable(insideTile, tile),
+        `walkable=${walkable} room=${room}`);
+    check(`spawn "${point.id}" can be picked up`, isInteractable(point));
+}
+
+const spots = createHidingSpots();
+for (const spot of spots) {
+    const tile = spot.inspectTile;
+    check(`hiding spot "${spot.id}" inspect tile is walkable & reachable`, layout.isWalkable(tile.x, tile.y) && navigation.isReachable(KEY_TILES.detectiveEntry, tile));
+    check(`hiding spot "${spot.id}" is in room ${spot.room}`, layout.getRoomIdAtTile(tile.x, tile.y) === spot.room);
+    check(`hiding spot "${spot.id}" can be used by Roro`, isInteractable(spot.definition.point));
+}
+
+for (const category of Object.values(HIDING_CATEGORY)) {
+    check(`category "${category}" has hiding spots`, spots.some((spot) => spot.category === category));
+}
+check('enough hiding capacity for all six objects', spots.length * HIDING_RULES.hidingSpotCapacity >= SCORE_CONFIG.MAX_SCORE);
+
+for (const sweep of ROOM_SWEEP_POINTS) {
+    check(`sweep "${sweep.id}" is walkable & reachable`, layout.isWalkable(sweep.tile.x, sweep.tile.y) && navigation.isReachable(KEY_TILES.detectiveEntry, sweep.tile));
+}
+for (const distraction of DISTRACTIONS) {
+    const tile = distraction.investigateTile;
+    check(`distraction "${distraction.id}" can be reached and used`, layout.isWalkable(tile.x, tile.y) && isInteractable(distraction.point));
+}
+
+// ---------------------------------------------------------------------------
+section('Navigation');
+
+function pathIsClear(path, start) {
+    let previous = start;
+    for (const waypoint of path) {
+        if (!navigation.hasClearLine(previous, waypoint)) {
+            return false;
+        }
+        previous = waypoint;
+    }
+    return true;
+}
+
+const destinations = [
+    ...spots.map((spot) => ({ name: spot.id, tile: spot.inspectTile })),
+    ...ROOM_SWEEP_POINTS.map((sweep) => ({ name: sweep.id, tile: sweep.tile })),
+    { name: 'exit', tile: KEY_TILES.detectiveExit }
+];
+let allClear = true;
+let pathCount = 0;
+for (const from of [{ name: 'outside', tile: KEY_TILES.detectiveOutside }, ...destinations]) {
+    for (const to of destinations) {
+        const start = layout.tileCenter(from.tile);
+        const path = navigation.findWorldPath(start, layout.tileCenter(to.tile));
+        pathCount += 1;
+        if (!path || !pathIsClear(path, start)) {
+            allClear = false;
+            console.log(`    path problem ${from.name} -> ${to.name}`);
+        }
+    }
+}
+check(`all ${pathCount} detective paths exist and never cross walls or furniture`, allClear);
+
+const wallTile = { x: 0, y: 0 };
+check('a wall tile is not walkable', !layout.isWalkable(wallTile.x, wallTile.y));
+check('furniture blocks navigation (bed)', !layout.isWalkable(2, 3));
+navigation.setTemporarilyBlocked({ x: 4, y: 10 }, true);
+navigation.setTemporarilyBlocked({ x: 5, y: 10 }, true);
+check('temporarily blocked doorway makes the bedroom unreachable', !navigation.isReachable(insideTile, { x: 5, y: 6 }));
+navigation.setTemporarilyBlocked({ x: 4, y: 10 }, false);
+navigation.setTemporarilyBlocked({ x: 5, y: 10 }, false);
+check('unblocked doorway restores the path', navigation.isReachable(insideTile, { x: 5, y: 6 }));
+
+// ---------------------------------------------------------------------------
+section('Evidence and score');
+
+{
+    const evidence = new EvidenceManager(EVIDENCE_ITEMS);
+    const testSpots = createHidingSpots();
+    check('initial score is 0', evidence.getScore() === 0);
+    check('max score is 6', evidence.getMaxScore() === 6 && EVIDENCE_ITEMS.length === 6);
+
+    check('pick up the bat', evidence.pickUp('bat').ok);
+    check('cannot pick up a second object while carrying', evidence.pickUp('globe').reason === 'handsFull');
+    check('hide the bat', evidence.hideCarried(testSpots[0]).ok && evidence.getScore() === 1);
+    check('the bat cannot be picked up again from the floor', !evidence.pickUp('bat').ok);
+    check('hiding with empty hands does nothing', !evidence.hideCarried(testSpots[1]).ok && evidence.getScore() === 1);
+
+    evidence.pickUp('globe');
+    check('cannot hide in an occupied spot', evidence.hideCarried(testSpots[0]).reason === 'occupied' && evidence.getScore() === 1);
+    check('can hide in a free spot', evidence.hideCarried(testSpots[1]).ok && evidence.getScore() === 2);
+
+    check('retrieve the bat (score -1)', evidence.retrieveFrom(testSpots[0]).ok && evidence.getScore() === 1);
+    check('re-hide the bat (counted once)', evidence.hideCarried(testSpots[2]).ok && evidence.getScore() === 2);
+
+    // Hide everything; score must stop at 6.
+    let spotIndex = 3;
+    for (const definition of EVIDENCE_ITEMS) {
+        if (evidence.getItem(definition.id).state === EVIDENCE_STATE.NOT_FOUND) {
+            evidence.pickUp(definition.id);
+            evidence.hideCarried(testSpots[spotIndex++]);
+        }
+    }
+    check('all six hidden gives exactly 6', evidence.getScore() === 6);
+    for (let attempt = 0; attempt < 10; attempt++) {
+        EVIDENCE_ITEMS.forEach((definition) => evidence.pickUp(definition.id));
+        testSpots.forEach((spot) => evidence.hideCarried(spot));
+    }
+    check('repeated interactions never exceed 6', evidence.getScore() <= 6);
+    check('discovered evidence leaves the score', evidence.markDiscovered('bat') && evidence.getScore() === 5);
+    check('a discovered object cannot change state again', !evidence.markDiscovered('bat') && !evidence.pickUp('bat').ok);
+}
+
+{
+    let distinct = true;
+    let validFixed = true;
+    for (let seed = 1; seed <= 300; seed++) {
+        const spawns = EvidenceManager.chooseSpawnPoints(EVIDENCE_ITEMS, BELONGING_SPAWN_POINTS, FIXED_SPAWN_POINTS, createSeededRandom(seed));
+        const randomIds = EVIDENCE_ITEMS.filter((item) => item.spawn === 'random').map((item) => spawns.get(item.id).id);
+        if (new Set(randomIds).size !== randomIds.length) distinct = false;
+        if (spawns.get('bat') !== FIXED_SPAWN_POINTS.bat || spawns.get('note') !== FIXED_SPAWN_POINTS.note) validFixed = false;
+    }
+    check('random belongings never share a spawn point (300 seeds)', distinct);
+    check('bat and note always use their fixed spawn points', validFixed);
+}
+
+// ---------------------------------------------------------------------------
+section('Inspection routes');
+
+{
+    const routeSpots = createHidingSpots();
+    const inspection = new InspectionManager({
+        routes: INSPECTION_ROUTES, sweepPoints: ROOM_SWEEP_POINTS, hidingSpots: routeSpots,
+        layout, navigation, originTile: KEY_TILES.detectiveEntry, random: createSeededRandom(7)
+    });
+    check('there are four routes', INSPECTION_ROUTES.length === 4);
+    INSPECTION_ROUTES.forEach((route, index) => {
+        const points = inspection.startRoute(index);
+        const expected = routeSpots.filter((spot) => spot.category === route.category).length + (route.includeRoomSweeps ? ROOM_SWEEP_POINTS.length : 0);
+        check(`route ${route.id} visits all ${expected} required points`, points.length === expected);
+        const roomsSeen = [];
+        points.forEach((point) => {
+            if (roomsSeen[roomsSeen.length - 1] !== point.room) roomsSeen.push(point.room);
+        });
+        check(`route ${route.id} visits each room in one block`, new Set(roomsSeen).size === roomsSeen.length);
+    });
+    const speeds = INSPECTION_ROUTES.map((route) => route.speedMultiplier);
+    check('route 4 is faster than routes 1-3', speeds[3] > Math.max(...speeds.slice(0, 3)));
+    const orders = new Set();
+    for (let seed = 1; seed <= 20; seed++) {
+        const randomInspection = new InspectionManager({
+            routes: INSPECTION_ROUTES, sweepPoints: ROOM_SWEEP_POINTS, hidingSpots: routeSpots,
+            layout, navigation, originTile: KEY_TILES.detectiveEntry, random: createSeededRandom(seed)
+        });
+        orders.add(randomInspection.startRoute(0).map((point) => point.id).join(','));
+    }
+    check('route order is randomised between games', orders.size > 1, `${orders.size} distinct orders`);
+}
+
+// ---------------------------------------------------------------------------
+section('Detective state machine (simulated)');
+
+/** Mock of the Detective game object: arrives instantly on the next tick. */
+class MockDetective {
+    constructor(position) {
+        this.position = { ...position };
+        this.pending = null;
+        this.searching = false;
+        this.speedMultiplier = 1;
+    }
+    navigateTo(target, callbacks) {
+        this.pending = { target, callbacks };
+    }
+    tick() {
+        if (this.pending) {
+            const { target, callbacks } = this.pending;
+            this.pending = null;
+            this.position = { ...target };
+            callbacks.onArrive?.();
+        }
+    }
+    stop() { this.pending = null; }
+    getPosition() { return this.position; }
+    setSpeedMultiplier(multiplier) { this.speedMultiplier = multiplier; }
+    faceTowards() {}
+    setSearching(searching) { this.searching = searching; }
+}
+
+function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 } = {}) {
+    const simSpots = createHidingSpots();
+    const evidence = new EvidenceManager(EVIDENCE_ITEMS, rules);
+    const spawns = EvidenceManager.chooseSpawnPoints(EVIDENCE_ITEMS, BELONGING_SPAWN_POINTS, FIXED_SPAWN_POINTS, createSeededRandom(seed));
+    for (const [id, point] of spawns) {
+        evidence.setSpawn(id, layout.tilePointToWorld(point), point.room);
+    }
+    const detective = new MockDetective(layout.tileCenter(KEY_TILES.detectiveOutside));
+    const inspection = new InspectionManager({
+        routes: INSPECTION_ROUTES, sweepPoints: ROOM_SWEEP_POINTS, hidingSpots: simSpots,
+        layout, navigation, originTile: KEY_TILES.detectiveEntry, random: createSeededRandom(seed)
+    });
+    const playerPosition = layout.tileCenter(KEY_TILES.roroStart);
+    const fsm = new DetectiveStateMachine({
+        detective, inspection, evidence,
+        getPlayerPosition: () => detective.position, // the detective always "reaches" Roro
+        positions: { entry: layout.tileCenter(KEY_TILES.detectiveEntry), exit: layout.tileCenter(KEY_TILES.detectiveExit) },
+        doors: { closeFrontDoor: () => {} }
+    });
+    const log = { interviews: [], caught: null, finished: false, rejected: [], playerPosition };
+    fsm.on(DETECTIVE_EVENTS.INTERVIEW_REQUESTED, ({ interviewIndex }) => log.interviews.push(interviewIndex));
+    fsm.on(DETECTIVE_EVENTS.EVIDENCE_DISCOVERED, (payload) => { log.caught = payload; });
+    fsm.on(DETECTIVE_EVENTS.VISIT_FINISHED, () => { log.finished = true; });
+    fsm.on(DETECTIVE_EVENTS.TRANSITION_REJECTED, (payload) => log.rejected.push(payload));
+    prepare({ evidence, spots: simSpots, fsm, inspection });
+
+    const run = (maxSteps = 5000, onStep = () => {}) => {
+        fsm.start();
+        for (let step = 0; step < maxSteps && fsm.isActive(); step++) {
+            detective.tick();
+            fsm.update(100);
+            if (fsm.state === DETECTIVE_STATE.INTERVIEWING && fsm.context.phase === 'talking') {
+                fsm.completeInterview();
+            }
+            onStep(step, fsm);
+        }
+        detective.tick();
+        return log;
+    };
+    return { fsm, evidence, spots: simSpots, inspection, run, log };
+}
+
+{
+    // Victory: Roro carries everything (carry limit lifted for the test), so nothing can be found.
+    const sim = createSimulation({
+        rules: { ...HIDING_RULES, carryLimit: 6 },
+        prepare: ({ evidence }) => EVIDENCE_ITEMS.forEach((item) => evidence.pickUp(item.id))
+    });
+    const log = sim.run();
+    check('victory: visit finishes when nothing is discovered', log.finished && sim.fsm.state === DETECTIVE_STATE.FINISHED);
+    check('victory: exactly three interviews, in order', log.interviews.join(',') === '0,1,2');
+    check('victory: all hiding spots were inspected', sim.spots.every((spot) => spot.inspected));
+    const expectedHistory = ['waiting', 'entering', 'inspecting', 'interviewing', 'inspecting', 'interviewing', 'inspecting', 'interviewing', 'inspecting', 'finished'];
+    check('victory: state history follows the FSM', sim.fsm.history.join(',') === expectedHistory.join(','), sim.fsm.history.join(','));
+    check('victory: no rejected transitions', log.rejected.length === 0);
+}
+
+{
+    // Defeat: the bat is hidden in a "very obvious" spot, searched in route 1.
+    const sim = createSimulation({
+        rules: { ...HIDING_RULES, carryLimit: 6 },
+        prepare: ({ evidence, spots: simSpots }) => {
+            EVIDENCE_ITEMS.forEach((item) => evidence.pickUp(item.id));
+            // Hide only the bat; keep the rest carried.
+            evidence.carriedIds = ['bat', ...evidence.carriedIds.filter((id) => id !== 'bat')];
+            evidence.hideCarried(simSpots.find((spot) => spot.id === 'underBed'));
+        }
+    });
+    const log = sim.run();
+    check('defeat: hidden bat in a searched spot is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught?.discoveries[0].item.id === 'bat');
+    check('defeat: discovery happened during route 1', sim.inspection.getRouteNumber() === 1 && log.interviews.length === 0);
+    check('defeat: discovered bat no longer counts', sim.evidence.getItem('bat').state === EVIDENCE_STATE.DISCOVERED && sim.evidence.getScore() === 0);
+}
+
+{
+    // Hiding in a spot AFTER it was searched is safe.
+    let hidden = false;
+    const sim = createSimulation({
+        rules: { ...HIDING_RULES, carryLimit: 6 },
+        prepare: ({ evidence }) => EVIDENCE_ITEMS.forEach((item) => evidence.pickUp(item.id))
+    });
+    const underBed = sim.spots.find((spot) => spot.id === 'underBed');
+    const log = sim.run(5000, () => {
+        if (!hidden && underBed.inspected) {
+            sim.evidence.carriedIds = ['bat', ...sim.evidence.carriedIds.filter((id) => id !== 'bat')];
+            hidden = sim.evidence.hideCarried(underBed).ok;
+        }
+    });
+    check('a spot searched earlier is safe for the rest of the visit', hidden && log.finished && sim.evidence.getScore() === 1);
+}
+
+{
+    // Exposed evidence near a room sweep point is discovered.
+    const sim = createSimulation({
+        prepare: ({ evidence }) => {
+            const sweep = ROOM_SWEEP_POINTS.find((point) => point.id === 'sweepHallway');
+            evidence.setSpawn('lamp', layout.tileCenter(sweep.tile), sweep.room);
+        }
+    });
+    const log = sim.run();
+    check('exposed evidence near an inspection point is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught.discoveries.some((entry) => entry.reason === 'exposed'));
+}
+
+{
+    // Distraction: interrupts, then the detective returns to the same route point.
+    const sim = createSimulation({
+        rules: { ...HIDING_RULES, carryLimit: 6 },
+        prepare: ({ evidence }) => EVIDENCE_ITEMS.forEach((item) => evidence.pickUp(item.id))
+    });
+    const kettle = DISTRACTIONS[0];
+    const source = {
+        name: kettle.name, room: kettle.room,
+        position: layout.tilePointToWorld(kettle.point),
+        investigatePosition: layout.tileCenter(kettle.investigateTile)
+    };
+    let pointBefore = null;
+    let pointAfterReturn = null;
+    let sawRedirected = false;
+    let sawReturning = false;
+    let interrupted = false;
+    sim.run(5000, (step, fsm) => {
+        if (!interrupted && fsm.state === DETECTIVE_STATE.INSPECTING && sim.inspection.getRouteNumber() === 2 && fsm.context.phase === 'searching') {
+            pointBefore = sim.inspection.getCurrentPoint();
+            interrupted = fsm.notifyDistraction(source);
+        }
+        if (fsm.state === DETECTIVE_STATE.REDIRECTED) sawRedirected = true;
+        if (fsm.state === DETECTIVE_STATE.RETURNING) sawReturning = true;
+        if (interrupted && sawReturning && pointAfterReturn === null && fsm.state === DETECTIVE_STATE.INSPECTING) {
+            pointAfterReturn = sim.inspection.getCurrentPoint();
+        }
+    });
+    check('distraction moves the detective to REDIRECTED then RETURNING', interrupted && sawRedirected && sawReturning);
+    check('after a distraction the route resumes at the interrupted point', pointBefore && pointAfterReturn === pointBefore);
+    check('the visit still finishes after a distraction', sim.log.finished);
+}
+
+{
+    const sim = createSimulation();
+    check('invalid transition WAITING -> CAUGHT is rejected', !sim.fsm.transition(DETECTIVE_STATE.CAUGHT) && sim.fsm.state === DETECTIVE_STATE.WAITING);
+    check('distraction is ignored before the detective enters', !sim.fsm.notifyDistraction({}));
+}
+
+// ---------------------------------------------------------------------------
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed > 0 ? 1 : 0);

@@ -1,0 +1,93 @@
+import { InteractiveObject } from './InteractiveObject.js';
+
+/**
+ * A predefined place where Roro can hide one evidence object.
+ *
+ * The hiding place stores evidence ids; the EvidenceManager is the single
+ * authority that changes evidence states and the score. The detective
+ * searches the spot when his inspection route reaches its `inspectTile`.
+ */
+export class HidingSpot extends InteractiveObject {
+    /**
+     * @param {object} definition entry of HIDING_SPOTS (apartmentData.js)
+     * @param {object} world positions converted to world pixels
+     * @param {{x:number,y:number}} world.position
+     * @param {{x:number,y:number}} world.inspectPosition
+     * @param {number} capacity
+     */
+    constructor(definition, { position, inspectPosition }, capacity = 1) {
+        super({ id: definition.id, position });
+        this.definition = definition;
+        this.name = definition.name;
+        this.room = definition.room;
+        this.category = definition.category;
+        this.inspectTile = definition.inspectTile;
+        this.inspectPosition = inspectPosition;
+        this.capacity = capacity;
+        this.storedEvidenceIds = [];
+        this.inspected = false;
+    }
+
+    isOccupied() {
+        return this.storedEvidenceIds.length > 0;
+    }
+
+    hasCapacity() {
+        return this.storedEvidenceIds.length < this.capacity;
+    }
+
+    store(evidenceId) {
+        if (!this.hasCapacity() || this.storedEvidenceIds.includes(evidenceId)) {
+            return false;
+        }
+        this.storedEvidenceIds.push(evidenceId);
+        return true;
+    }
+
+    remove(evidenceId) {
+        const index = this.storedEvidenceIds.indexOf(evidenceId);
+        if (index === -1) {
+            return false;
+        }
+        this.storedEvidenceIds.splice(index, 1);
+        return true;
+    }
+
+    markInspected() {
+        this.inspected = true;
+    }
+
+    // ------------------------------------------------------------ interaction
+
+    isAvailable({ evidence }) {
+        // Shown when Roro carries something, or when something can be retrieved.
+        return evidence.getCarriedItem() !== null || (this.isOccupied() && evidence.rules.allowRetrieval);
+    }
+
+    canInteract({ evidence }) {
+        const carried = evidence.getCarriedItem();
+        if (carried) {
+            return this.hasCapacity();
+        }
+        return this.isOccupied() && evidence.rules.allowRetrieval;
+    }
+
+    getPrompt({ evidence }) {
+        const carried = evidence.getCarriedItem();
+        if (carried) {
+            return this.hasCapacity()
+                ? `Hide the ${carried.definition.name} ${this.name}`
+                : `Something is already hidden ${this.name}`;
+        }
+        const storedItem = evidence.getItem(this.storedEvidenceIds[0]);
+        return `Take back the ${storedItem.definition.name}`;
+    }
+
+    interact(context) {
+        const { evidence } = context;
+        const result = evidence.getCarriedItem()
+            ? evidence.hideCarried(this)
+            : evidence.retrieveFrom(this);
+        context.onEvidenceAction?.(result, this);
+    }
+}
