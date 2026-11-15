@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import {
     COLORS,
@@ -88,7 +89,7 @@ export class ApartmentScene extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
 
         AudioManager.playMusic('music-ambience');
-        this.hud.showMessage('The detective is at the door. Hide the evidence!', { duration: 3200 });
+        this.hud.showMessage(t('The detective is at the door. Hide the evidence!'), { duration: 3200 });
         this.time.delayedCall(VISIT_START_DELAY, () => this.detectiveAI.start());
     }
 
@@ -245,11 +246,11 @@ export class ApartmentScene extends Phaser.Scene {
             this.updatePhaseText();
         });
         ai.on(DETECTIVE_EVENTS.ROUTE_STARTED, ({ route }) => {
-            this.hud.showMessage(`The detective starts searching: ${route.name.toLowerCase()}.`);
+            this.hud.showMessage(t("The detective starts searching: {route}.", { route: t(route.name).toLowerCase() }));
             this.updatePhaseText();
         });
         ai.on(DETECTIVE_EVENTS.INSPECTION_FINISHED, () => this.updatePhaseText());
-        ai.on(DETECTIVE_EVENTS.DISTRACTED, () => this.hud.showMessage('The detective goes to check the noise.'));
+        ai.on(DETECTIVE_EVENTS.DISTRACTED, () => this.hud.showMessage(t('The detective goes to check the noise.')));
         ai.on(DETECTIVE_EVENTS.INTERVIEW_REQUESTED, ({ interviewIndex }) => this.startInterview(interviewIndex));
         ai.on(DETECTIVE_EVENTS.EVIDENCE_DISCOVERED, (payload) => this.onCaught(payload));
         ai.on(DETECTIVE_EVENTS.VISIT_FINISHED, () => this.onVisitFinished());
@@ -316,13 +317,13 @@ export class ApartmentScene extends Phaser.Scene {
         const state = this.detectiveAI.state;
         const progress = this.inspection.getProgress();
         const labels = {
-            [DETECTIVE_STATE.WAITING]: 'Someone is knocking...',
-            [DETECTIVE_STATE.ENTERING]: 'The detective comes in',
-            [DETECTIVE_STATE.INTERVIEWING]: 'The detective wants to talk to you',
-            [DETECTIVE_STATE.FINISHED]: 'The detective is leaving',
-            [DETECTIVE_STATE.CAUGHT]: 'Caught'
+            [DETECTIVE_STATE.WAITING]: t('Someone is knocking...'),
+            [DETECTIVE_STATE.ENTERING]: t('The detective comes in'),
+            [DETECTIVE_STATE.INTERVIEWING]: t('The detective wants to talk to you'),
+            [DETECTIVE_STATE.FINISHED]: t('The detective is leaving'),
+            [DETECTIVE_STATE.CAUGHT]: t('Caught')
         };
-        const searchText = `Search ${progress.routeNumber}/${progress.routeCount}: ${progress.routeName} (${progress.pointsDone}/${progress.pointCount})`;
+        const searchText = t("Search {round}/{total}: {route} ({done}/{count})", { round: progress.routeNumber, total: progress.routeCount, route: t(progress.routeName), done: progress.pointsDone, count: progress.pointCount });
         this.hud.setPhase(labels[state] ?? searchText);
     }
 
@@ -331,24 +332,25 @@ export class ApartmentScene extends Phaser.Scene {
     onEvidenceAction(result) {
         if (!result.ok) {
             const messages = {
-                handsFull: 'Your hands are full. Hide what you are carrying first.',
-                occupied: 'Something is already hidden there.',
-                nothingCarried: 'You are not carrying anything.'
+                handsFull: t('Your hands are full. Hide what you are carrying first.'),
+                occupied: t('Something is already hidden there.'),
+                nothingCarried: t('You are not carrying anything.')
             };
-            this.hud.showMessage(messages[result.reason] ?? 'You cannot do that now.', { color: COLORS.textMuted });
+            this.hud.showMessage(messages[result.reason] ?? t('You cannot do that now.'), { color: COLORS.textMuted });
             return;
         }
-        AudioManager.playSfx('sfx-interact');
-        const name = result.item.definition.name;
+        const sound = { pickUp: 'sfx-pickup', retrieve: 'sfx-pickup', hide: 'sfx-hide' }[result.action];
+        if (sound) AudioManager.playSfx(sound);
+        const name = t(result.item.definition.name);
         switch (result.action) {
             case 'pickUp':
-                this.hud.showMessage(`You picked up the ${name}. Find a place to hide it.`);
+                this.hud.showMessage(t("You picked up the {name}. Find a place to hide it.", { name: name }));
                 break;
             case 'hide':
-                this.hud.showMessage(`You hid the ${name} ${result.hidingSpot.name}. +1`, { color: COLORS.success });
+                this.hud.showMessage(t("You hid the {name} {place}. +1", { name: name, place: t(result.hidingSpot.name) }), { color: COLORS.success });
                 break;
             case 'retrieve':
-                this.hud.showMessage(`You took the ${name} back. -1`, { color: COLORS.accent });
+                this.hud.showMessage(t("You took the {name} back. -1", { name: name }), { color: COLORS.accent });
                 break;
             default:
                 break;
@@ -356,6 +358,7 @@ export class ApartmentScene extends Phaser.Scene {
     }
 
     openNote(item) {
+        AudioManager.playSfx('sfx-interact', { volume: 0.55 });
         this.setWorldSuspended(true);
         this.interaction.clearFocus();
         this.noteInterface.open(() => {
@@ -382,7 +385,7 @@ export class ApartmentScene extends Phaser.Scene {
     onDistractionNoise(source) {
         AudioManager.playSfx('sfx-kettle');
         const redirected = this.detectiveAI.notifyDistraction(source);
-        this.hud.showMessage(redirected ? source.definition.noiseText : `${source.definition.noiseText} Nobody comes to check.`);
+        this.hud.showMessage(redirected ? t(source.definition.noiseText) : t("{noise} Nobody comes to check.", { noise: t(source.definition.noiseText) }));
     }
 
     // ======================================================== scene changes
@@ -401,11 +404,12 @@ export class ApartmentScene extends Phaser.Scene {
     }
 
     onResume(_systems, data = {}) {
+        AudioManager.playMusic('music-ambience');
         this.inputManager.reset();
         this.roro.setControlsEnabled(true);
         if (data.interviewCompleted) {
             this.detectiveAI.completeInterview();
-            this.hud.showMessage('The detective goes back to searching.');
+            this.hud.showMessage(t('The detective goes back to searching.'));
         }
     }
 
@@ -421,12 +425,12 @@ export class ApartmentScene extends Phaser.Scene {
         this.interaction.clearFocus();
 
         const { item, reason, hidingSpot } = discoveries[0];
-        const roomName = this.layout.getRoom(point.room)?.name.toLowerCase() ?? 'apartment';
-        const where = reason === 'hidingSpot' ? hidingSpot.name : `lying in the ${roomName}`;
-        const message = `The detective found the ${item.definition.name} ${where}.`;
+        const roomName = t(this.layout.getRoom(point.room)?.name ?? 'Apartment').toLowerCase();
+        const where = reason === 'hidingSpot' ? t(hidingSpot.name) : t("lying in the {room}", { room: roomName });
+        const message = t("The detective found the {name} {place}.", { name: t(item.definition.name), place: where });
         this.hud.showMessage(message, { duration: END_SCREEN_DELAY, color: COLORS.danger });
 
-        AudioManager.stopMusic();
+        AudioManager.playMusic('music-rest');
         AudioManager.playSfx('sfx-defeat');
         this.cameras.main.shake(400, 0.008);
         this.cameras.main.flash(300, 120, 0, 0);
@@ -443,8 +447,8 @@ export class ApartmentScene extends Phaser.Scene {
         this.physics.pause();
         this.roro.setControlsEnabled(false);
         this.interaction.clearFocus();
-        this.hud.showMessage('The front door closes. The detective is gone.', { duration: END_SCREEN_DELAY, color: COLORS.success });
-        AudioManager.stopMusic();
+        this.hud.showMessage(t('The front door closes. The detective is gone.'), { duration: END_SCREEN_DELAY, color: COLORS.success });
+        AudioManager.playMusic('music-rest');
         AudioManager.playSfx('sfx-victory');
 
         GameSession.finishGame({ won: true, score: this.evidence.getScore(), maxScore: this.evidence.getMaxScore() });

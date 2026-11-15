@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { COLORS, DEPTH } from '../data/gameConfig.js';
 import { EVIDENCE_STATE } from '../data/evidenceData.js';
 import { InteractiveObject } from './InteractiveObject.js';
@@ -42,12 +43,12 @@ export class EvidenceItem extends InteractiveObject {
 
     getPrompt({ evidence }) {
         if (this.needsReading()) {
-            return 'Read the note';
+            return t('Read the note');
         }
         if (evidence.getCarriedItem()) {
-            return `Your hands are full (${this.definition.name})`;
+            return t("Your hands are full ({name})", { name: t(this.definition.name) });
         }
-        return `Pick up the ${this.definition.name}`;
+        return t("Pick up the {name}", { name: t(this.definition.name) });
     }
 
     interact(context) {

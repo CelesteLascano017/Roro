@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import { DEPTH, GAME_HEIGHT, GAME_WIDTH } from '../data/gameConfig.js';
 import { NOTE_CONTENT } from '../data/evidenceData.js';
@@ -29,20 +30,20 @@ export class NoteInterface {
         this.paper.setScale(scale);
 
         const top = this.paper.y - this.paper.displayHeight / 2;
-        this.heading = scene.add.text(centerX, top + 70, NOTE_CONTENT.heading, textStyle({ color: ink, fontSize: '32px' })).setOrigin(0.5);
-        this.label = scene.add.text(centerX, top + 130, NOTE_CONTENT.body, textStyle({ color: ink })).setOrigin(0.5);
+        this.heading = scene.add.text(centerX, top + 70, t(NOTE_CONTENT.heading), textStyle({ color: ink, fontSize: '32px' })).setOrigin(0.5);
+        this.label = scene.add.text(centerX, top + 130, t(NOTE_CONTENT.body), textStyle({ color: ink })).setOrigin(0.5);
         this.name = scene.add.text(centerX, top + 172, '', textStyle({
             color: '#7a1f1f',
             fontSize: '32px',
             align: 'center',
             wordWrap: { width: this.paper.displayWidth - 70 }
         })).setOrigin(0.5);
-        this.footer = scene.add.text(centerX, top + this.paper.displayHeight - 90, NOTE_CONTENT.footer, textStyle({
+        this.footer = scene.add.text(centerX, top + this.paper.displayHeight - 90, t(NOTE_CONTENT.footer), textStyle({
             color: ink,
             align: 'center',
             wordWrap: { width: this.paper.displayWidth - 70 }
         })).setOrigin(0.5);
-        this.closeHint = scene.add.text(centerX, GAME_HEIGHT - 16, 'Press E or click to put the note down', textStyle({ color: '#d8cfc0' })).setOrigin(0.5, 1);
+        this.closeHint = scene.add.text(centerX, GAME_HEIGHT - 16, t('Press E or click to put the note down'), textStyle({ color: '#d8cfc0' })).setOrigin(0.5, 1);
 
         this.container = scene.add.container(0, 0, [this.dim, this.paper, this.heading, this.label, this.name, this.footer, this.closeHint])
             .setScrollFactor(0, 0, true)

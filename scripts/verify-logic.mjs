@@ -332,7 +332,7 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
 }
 
 {
-    // Defeat: the bat is hidden in a "very obvious" spot, searched in route 1.
+    // One discovery: the bat is hidden in a "very obvious" spot, searched in route 1.
     const sim = createSimulation({
         rules: { ...HIDING_RULES, carryLimit: 6 },
         prepare: ({ evidence, spots: simSpots }) => {
@@ -343,9 +343,10 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
         }
     });
     const log = sim.run();
-    check('defeat: hidden bat in a searched spot is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught?.discoveries[0].item.id === 'bat');
-    check('defeat: discovery happened during route 1', sim.inspection.getRouteNumber() === 1 && log.interviews.length === 0);
-    check('defeat: discovered bat no longer counts', sim.evidence.getItem('bat').state === EVIDENCE_STATE.DISCOVERED && sim.evidence.getScore() === 0);
+    check('first hidden evidence immediately causes defeat', !log.finished && sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught?.discoveries[0].item.id === 'bat');
+    check('discovered evidence is removed from its hiding place', !sim.spots.find(spot => spot.id === 'underBed').isOccupied());
+    check('defeat stops route 1 before interviews', sim.inspection.getRouteNumber() === 1 && log.interviews.length === 0);
+    check('discovered bat no longer counts', sim.evidence.getItem('bat').state === EVIDENCE_STATE.DISCOVERED && sim.evidence.getScore() === 0);
 }
 
 {
@@ -374,7 +375,7 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
         }
     });
     const log = sim.run();
-    check('exposed evidence near an inspection point is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught.discoveries.some((entry) => entry.reason === 'exposed'));
+    check('exposed evidence near an inspection point is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught.discoveries.some(entry => entry.reason === 'exposed'));
 }
 
 {
@@ -414,6 +415,22 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
     const sim = createSimulation();
     check('invalid transition WAITING -> CAUGHT is rejected', !sim.fsm.transition(DETECTIVE_STATE.CAUGHT) && sim.fsm.state === DETECTIVE_STATE.WAITING);
     check('distraction is ignored before the detective enters', !sim.fsm.notifyDistraction({}));
+}
+
+// All difficulty modes retain their visibility and lose on the first evidence.
+{
+    const { DIFFICULTY_SETTINGS } = await import('../src/data/gameConfig.js');
+    for (const [difficulty, visibility] of [['easy', 'full'], ['normal', 'room'], ['hard', 'radius']]) {
+        check(difficulty + ': original visibility remains', DIFFICULTY_SETTINGS[difficulty].visibility === visibility);
+        const sim = createSimulation({ rules: { ...HIDING_RULES, carryLimit: 6 }, prepare: ({ evidence, spots }) => {
+            EVIDENCE_ITEMS.forEach(item => evidence.pickUp(item.id));
+            evidence.hideCarried(spots.find(spot => spot.id === 'underBed'));
+        } });
+        sim.run();
+        check(difficulty + ': first evidence ends the visit', !!sim.log.caught && !sim.log.finished);
+    }
+    check('normal retains room darkness', DIFFICULTY_SETTINGS.normal.obscuredAlpha === 0.93);
+    check('hard retains visibility radius and darkness', DIFFICULTY_SETTINGS.hard.visibilityRadius === 110 && DIFFICULTY_SETTINGS.hard.obscuredAlpha === 0.985);
 }
 
 // ---------------------------------------------------------------------------

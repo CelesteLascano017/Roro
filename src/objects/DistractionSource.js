@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { DISTRACTION_CONFIG } from '../data/gameConfig.js';
 import { InteractiveObject } from './InteractiveObject.js';
 
@@ -43,11 +44,11 @@ export class DistractionSource extends InteractiveObject {
     getPrompt() {
         switch (this.state) {
             case DISTRACTION_STATE.READY:
-                return this.definition.prompt;
+                return t(this.definition.prompt);
             case DISTRACTION_STATE.ARMED:
-                return `The ${this.name} is heating up...`;
+                return t("The {name} is heating up...", { name: t(this.name) });
             default:
-                return `The ${this.name} is still hot (wait ${Math.ceil(this.timer / 1000)}s)`;
+                return t("The {name} is still hot (wait {seconds}s)", { name: t(this.name), seconds: Math.ceil(this.timer / 1000) });
         }
     }
 

@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { COLORS, DEPTH, GAME_HEIGHT, GAME_WIDTH } from '../data/gameConfig.js';
 import { MuteButton } from './MuteButton.js';
 import { TEXT_STYLES, textStyle } from './textStyles.js';
@@ -31,7 +32,7 @@ export class HUD {
         this.phaseText = scene.add.text(GAME_WIDTH / 2 + 20, 8, '', textStyle({ color: COLORS.textMuted })).setOrigin(0.5, 0);
         objects.push(this.phaseText);
 
-        this.difficultyText = scene.add.text(GAME_WIDTH - 140, 8, difficultyLabel, textStyle({ color: COLORS.accent })).setOrigin(1, 0);
+        this.difficultyText = scene.add.text(GAME_WIDTH - 140, 8, t(difficultyLabel), textStyle({ color: COLORS.accent })).setOrigin(1, 0);
         objects.push(this.difficultyText);
 
         this.muteButton = new MuteButton(scene, GAME_WIDTH - 66, 18, { fixed: true });
@@ -40,7 +41,7 @@ export class HUD {
         this.carryText = scene.add.text(12, GAME_HEIGHT - 28, '', TEXT_STYLES.hud);
         objects.push(this.carryText);
 
-        this.hintText = scene.add.text(GAME_WIDTH - 12, GAME_HEIGHT - 28, 'WASD: move   E: interact   ESC: pause   M: sound', textStyle({ color: COLORS.textMuted, stroke: '#000000', strokeThickness: 4 })).setOrigin(1, 0);
+        this.hintText = scene.add.text(GAME_WIDTH - 12, GAME_HEIGHT - 28, t('WASD: move   E: interact   ESC: pause   M: sound'), textStyle({ color: COLORS.textMuted, stroke: '#000000', strokeThickness: 4 })).setOrigin(1, 0);
         objects.push(this.hintText);
 
         this.messageText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 78, '', textStyle({
@@ -62,7 +63,7 @@ export class HUD {
     }
 
     setScore(score) {
-        this.scoreText.setText(`HIDDEN ${score} / ${this.maxScore}`);
+        this.scoreText.setText(t("HIDDEN {score} / {max}", { score: score, max: this.maxScore }));
         this.pips.forEach((pip, index) => pip.setFillStyle(index < score ? COLORS.accentHex : 0x2c2536));
     }
 
@@ -71,7 +72,7 @@ export class HUD {
     }
 
     setCarried(name) {
-        this.carryText.setText(name ? `Carrying: ${name}` : 'Carrying: nothing');
+        this.carryText.setText(name ? t("Carrying: {name}", { name: t(name) }) : t('Carrying: nothing'));
         this.carryText.setColor(name ? COLORS.accent : COLORS.textMuted);
     }
 

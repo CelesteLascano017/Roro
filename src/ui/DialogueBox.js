@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH } from '../data/gameConfig.js';
 import { textStyle } from './textStyles.js';
 
@@ -36,7 +37,7 @@ export class DialogueBox {
             lineSpacing: 8,
             wordWrap: { width: GAME_WIDTH - textX - 60 }
         }));
-        this.continueText = scene.add.text(GAME_WIDTH - 44, boxY + boxHeight - 14, 'E / Space / click >', textStyle({ color: COLORS.accent })).setOrigin(1, 1).setVisible(false);
+        this.continueText = scene.add.text(GAME_WIDTH - 44, boxY + boxHeight - 14, t('E / Space / click >'), textStyle({ color: COLORS.accent })).setOrigin(1, 1).setVisible(false);
         this.continueTween = scene.tweens.add({ targets: this.continueText, alpha: 0.3, duration: 500, yoyo: true, repeat: -1 });
 
         this.fullText = '';
@@ -49,7 +50,7 @@ export class DialogueBox {
      * @param {string} text
      */
     showLine(speaker, text) {
-        this.nameText.setText(speaker.name).setColor(speaker.nameColor ?? COLORS.text);
+        this.nameText.setText(t(speaker.name)).setColor(speaker.nameColor ?? COLORS.text);
         this.portrait.setTexture(speaker.portraitKey);
         const isFallback = Boolean(this.portrait.texture.customData?.isFallback);
         if (isFallback) {

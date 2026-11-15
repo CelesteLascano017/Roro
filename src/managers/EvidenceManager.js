@@ -188,7 +188,9 @@ export class EvidenceManager extends SimpleEmitter {
         const found = [];
         if (hidingSpot) {
             for (const id of hidingSpot.storedEvidenceIds) {
-                found.push({ item: this.items.get(id), reason: 'hidingSpot', hidingSpot });
+                const item = this.items.get(id);
+                if (item?.state !== EVIDENCE_STATE.HIDDEN) continue;
+                found.push({ item, reason: 'hidingSpot', hidingSpot });
             }
         }
         for (const item of this.items.values()) {
@@ -205,6 +207,10 @@ export class EvidenceManager extends SimpleEmitter {
 
     markDiscovered(id) {
         const item = this.items.get(id);
-        return item ? this.transition(item, EVIDENCE_STATE.DISCOVERED) : false;
+        if (!item || !this.transition(item, EVIDENCE_STATE.DISCOVERED)) return false;
+        item.position = null;
+        item.room = null;
+        item.hidingSpotId = null;
+        return true;
     }
 }

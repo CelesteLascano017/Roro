@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import { COLORS, FONT_FAMILY, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../data/gameConfig.js';
 import { AssetManager } from '../managers/AssetManager.js';
@@ -28,7 +29,7 @@ export class PreloadScene extends Phaser.Scene {
             fill.width = (barWidth - 4) * value;
         });
         this.load.on('fileprogress', (file) => {
-            label.setText(`Loading ${file.key}...`);
+            label.setText(t("Loading {file}...", { file: file.key }));
         });
 
         AssetManager.queueAll(this);

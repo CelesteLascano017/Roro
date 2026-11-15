@@ -1,4 +1,6 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
+import { AudioManager } from '../managers/AudioManager.js';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../data/gameConfig.js';
 import { INTERVIEWS, SPEAKERS, formatStoryText } from '../data/dialogueData.js';
 import { DialogueBox } from '../ui/DialogueBox.js';
@@ -25,8 +27,9 @@ export class DialogueScene extends Phaser.Scene {
     }
 
     create() {
+        AudioManager.playMusic('music-rest');
         this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x07060c, 0.94).setOrigin(0, 0);
-        this.add.text(GAME_WIDTH / 2, 48, this.interview.title.toUpperCase(), TEXT_STYLES.heading).setOrigin(0.5);
+        this.add.text(GAME_WIDTH / 2, 48, t(this.interview.title).toUpperCase(), TEXT_STYLES.heading).setOrigin(0.5);
 
         // Both characters face each other above the dialogue box.
         this.add.image(GAME_WIDTH / 2 - 150, 300, SPEAKERS.roro.portraitKey).setScale(2).setOrigin(0.5, 1);

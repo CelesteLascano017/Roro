@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../data/gameConfig.js';
 import { INTRODUCTION, SPEAKERS, formatStoryText } from '../data/dialogueData.js';
@@ -17,7 +18,7 @@ export class IntroductionScene extends Phaser.Scene {
 
     create() {
         fadeIn(this);
-        AudioManager.stopMusic();
+        AudioManager.playMusic('music-rest');
         this.lineIndex = -1;
         this.canAdvance = false;
 
@@ -28,7 +29,7 @@ export class IntroductionScene extends Phaser.Scene {
             lineSpacing: 10,
             wordWrap: { width: GAME_WIDTH - 160 }
         })).setOrigin(0.5);
-        this.hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 36, 'E / Space / click to continue', textStyle({ color: COLORS.textMuted })).setOrigin(0.5).setAlpha(0);
+        this.hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 36, t('E / Space / click to continue'), textStyle({ color: COLORS.textMuted })).setOrigin(0.5).setAlpha(0);
 
         const advance = () => this.advance();
         this.input.keyboard.on('keydown-E', advance);
@@ -57,7 +58,7 @@ export class IntroductionScene extends Phaser.Scene {
 
         const line = INTRODUCTION[this.lineIndex];
         const speaker = line.speaker ? SPEAKERS[line.speaker] : null;
-        this.speakerText.setText(speaker ? speaker.name : '').setColor(speaker?.nameColor ?? COLORS.text);
+        this.speakerText.setText(speaker ? t(speaker.name) : '').setColor(speaker?.nameColor ?? COLORS.text);
         this.lineText.setText(formatStoryText(line.text))
             .setFontSize(line.emphasis ? 32 : 16)
             .setColor(line.knock ? COLORS.danger : COLORS.text)

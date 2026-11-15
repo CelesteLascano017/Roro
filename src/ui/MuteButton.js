@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import { COLORS } from '../data/gameConfig.js';
 import { AudioManager } from '../managers/AudioManager.js';
@@ -37,7 +38,7 @@ export class MuteButton extends Phaser.GameObjects.Container {
 
     refresh() {
         const muted = AudioManager.isMuted();
-        this.label.setText(muted ? 'Sound: OFF' : 'Sound: ON');
+        this.label.setText(muted ? t('Sound: OFF') : t('Sound: ON'));
         this.label.setColor(muted ? COLORS.textMuted : COLORS.text);
     }
 

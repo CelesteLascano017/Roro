@@ -287,15 +287,17 @@ export class DetectiveStateMachine extends SimpleEmitter {
     }
 
     /**
-     * Marks discovered evidence. Returns true when a decisive object was
-     * found (the FSM has then moved to CAUGHT).
+     * Finding decisive evidence ends the visit immediately.
      */
     handleDiscoveries(discoveries, point) {
         if (discoveries.length === 0) {
             return false;
         }
-        discoveries.forEach(({ item }) => this.evidence.markDiscovered(item.id));
-        const decisive = discoveries.filter(({ item }) => item.definition.decisive);
+        if (!this.isActive()) return false;
+        const newlyFound = discoveries.filter(({ item }) => this.evidence.markDiscovered(item.id));
+        if (newlyFound.length === 0) return false;
+        for (const { item, hidingSpot } of newlyFound) hidingSpot?.remove(item.id);
+        const decisive = newlyFound.filter(({ item }) => item.definition.decisive);
         if (decisive.length > 0) {
             this.transition(DETECTIVE_STATE.CAUGHT, { discoveries: decisive, point });
             return true;

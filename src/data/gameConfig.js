@@ -41,7 +41,7 @@ export const VISIBILITY_MODE = Object.freeze({
 });
 
 /**
- * Difficulty only changes what the player can see. The detective behaves the
+ * Difficulty changes visibility only. The detective behaves the
  * same in every mode, as defined in GAME_DESIGN.md (section 11).
  */
 export const DIFFICULTY_SETTINGS = Object.freeze({
@@ -106,7 +106,7 @@ export const DETECTIVE_CONFIG = Object.freeze({
     interviewFallbackTimeout: 6000,
     footstepInterval: 420,
     // Footsteps are inaudible beyond this distance from Roro (px).
-    footstepHearingDistance: 650
+    footstepHearingDistance: 96
 });
 
 /**
