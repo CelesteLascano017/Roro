@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { STORY } from './gameConfig.js';
 
 /**
@@ -72,5 +73,5 @@ export const INTERVIEWS = [
 
 /** Replaces story placeholders such as {victimName} in a text. */
 export function formatStoryText(text) {
-    return text.replaceAll('{victimName}', STORY.victimFullName);
+    return t(text).replaceAll('{victimName}', STORY.victimFullName);
 }

@@ -274,9 +274,9 @@ class MockDetective {
     setSearching(searching) { this.searching = searching; }
 }
 
-function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 } = {}) {
+function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3, evidenceToSolve = 1 } = {}) {
     const simSpots = createHidingSpots();
-    const evidence = new EvidenceManager(EVIDENCE_ITEMS, rules);
+    const evidence = new EvidenceManager(EVIDENCE_ITEMS, rules, evidenceToSolve);
     const spawns = EvidenceManager.chooseSpawnPoints(EVIDENCE_ITEMS, BELONGING_SPAWN_POINTS, FIXED_SPAWN_POINTS, createSeededRandom(seed));
     for (const [id, point] of spawns) {
         evidence.setSpawn(id, layout.tilePointToWorld(point), point.room);
@@ -332,7 +332,7 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
 }
 
 {
-    // Defeat: the bat is hidden in a "very obvious" spot, searched in route 1.
+    // One discovery: the bat is hidden in a "very obvious" spot, searched in route 1.
     const sim = createSimulation({
         rules: { ...HIDING_RULES, carryLimit: 6 },
         prepare: ({ evidence, spots: simSpots }) => {
@@ -343,9 +343,10 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
         }
     });
     const log = sim.run();
-    check('defeat: hidden bat in a searched spot is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught?.discoveries[0].item.id === 'bat');
-    check('defeat: discovery happened during route 1', sim.inspection.getRouteNumber() === 1 && log.interviews.length === 0);
-    check('defeat: discovered bat no longer counts', sim.evidence.getItem('bat').state === EVIDENCE_STATE.DISCOVERED && sim.evidence.getScore() === 0);
+    check('first hidden evidence immediately causes defeat', !log.finished && sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught?.discoveries[0].item.id === 'bat');
+    check('discovered evidence is removed from its hiding place', !sim.spots.find(spot => spot.id === 'underBed').isOccupied());
+    check('defeat stops route 1 before interviews', sim.inspection.getRouteNumber() === 1 && log.interviews.length === 0);
+    check('discovered bat no longer counts', sim.evidence.getItem('bat').state === EVIDENCE_STATE.DISCOVERED && sim.evidence.getScore() === 0);
 }
 
 {
@@ -374,7 +375,7 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
         }
     });
     const log = sim.run();
-    check('exposed evidence near an inspection point is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught.discoveries.some((entry) => entry.reason === 'exposed'));
+    check('exposed evidence near an inspection point is discovered', sim.fsm.state === DETECTIVE_STATE.CAUGHT && log.caught.discoveries.some(entry => entry.reason === 'exposed'));
 }
 
 {
@@ -414,6 +415,61 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3 }
     const sim = createSimulation();
     check('invalid transition WAITING -> CAUGHT is rejected', !sim.fsm.transition(DETECTIVE_STATE.CAUGHT) && sim.fsm.state === DETECTIVE_STATE.WAITING);
     check('distraction is ignored before the detective enters', !sim.fsm.notifyDistraction({}));
+}
+
+// Difficulty keeps visibility while changing the number of distinct evidence objects needed.
+{
+    const { DIFFICULTY_SETTINGS } = await import('../src/data/gameConfig.js');
+    for (const [difficulty, visibility, required] of [['easy', 'full', 3], ['normal', 'room', 2], ['hard', 'radius', 1]]) {
+        check(difficulty + ': original visibility remains', DIFFICULTY_SETTINGS[difficulty].visibility === visibility);
+        const sim = createSimulation({ rules: { ...HIDING_RULES, carryLimit: 6 }, prepare: ({ evidence, spots }) => {
+            EVIDENCE_ITEMS.forEach(item => evidence.pickUp(item.id));
+            evidence.hideCarried(spots.find(spot => spot.id === 'underBed'));
+        } });
+        sim.run();
+        check(difficulty + ': configured evidence threshold', DIFFICULTY_SETTINGS[difficulty].evidenceToSolve === required);
+        const thresholdSim = createSimulation({ evidenceToSolve: required });
+        thresholdSim.fsm.start();
+        thresholdSim.fsm.transition(DETECTIVE_STATE.INSPECTING, { routeIndex: 0 });
+        for (let index = 0; index < required; index++) {
+            const item = thresholdSim.evidence.getItem(EVIDENCE_ITEMS[index].id);
+            const discovery = [{ item, reason: 'exposed' }];
+            const ended = thresholdSim.fsm.handleDiscoveries(discovery, { room: 'hallway' });
+            const progress = thresholdSim.evidence.getCaseProgress();
+            check(difficulty + ': discovery ' + (index + 1) + ' counts toward case', progress.found === index + 1 && progress.remaining === required - index - 1);
+            check(difficulty + ': defeat only when case is solved', ended === (index === required - 1));
+            thresholdSim.fsm.handleDiscoveries(discovery, { room: 'hallway' });
+            check(difficulty + ': the same object never counts twice', thresholdSim.evidence.getCaseProgress().found === index + 1);
+        }
+        check(difficulty + ': restart clears investigation', createSimulation({ evidenceToSolve: required }).evidence.getCaseProgress().found === 0);
+    }
+    check('normal retains room darkness', DIFFICULTY_SETTINGS.normal.obscuredAlpha === 0.93);
+    check('hard retains visibility radius and darkness', DIFFICULTY_SETTINGS.hard.visibilityRadius === 110 && DIFFICULTY_SETTINGS.hard.obscuredAlpha === 0.985);
+}
+
+{
+    const sim = createSimulation({ evidenceToSolve: 3, rules: { ...HIDING_RULES, carryLimit: 6 }, prepare: ({ evidence, spots }) => {
+        EVIDENCE_ITEMS.forEach(item => evidence.pickUp(item.id));
+        evidence.hideCarried(spots.find(spot => spot.id === 'underBed'));
+        evidence.hideCarried(spots.find(spot => spot.id === 'bathtub'));
+    } });
+    sim.run();
+    check('two discoveries do not stop a three-evidence visit', sim.log.finished && !sim.log.caught && sim.evidence.getCaseProgress().remaining === 1);
+}
+{
+    const sim = createSimulation({ evidenceToSolve: 2 });
+    sim.fsm.start();
+    sim.fsm.transition(DETECTIVE_STATE.INSPECTING, { routeIndex: 0 });
+    const batch = ['globe', 'stars', 'lamp'].map(id => ({ item: sim.evidence.getItem(id), reason: 'exposed' }));
+    sim.fsm.handleDiscoveries(batch, { room: 'hallway' });
+    check('multiple objects at once solve the case without negative remaining count', sim.evidence.getCaseProgress().remaining === 0 && sim.evidence.getCaseProgress().found === 2 && !!sim.log.caught);
+}
+{
+    const { caseAtmosphere } = await import('../src/utils/caseAtmosphere.js');
+    check('three objects remaining has normal music and no red filter', caseAtmosphere(3).musicRate === 1 && caseAtmosphere(3).intensity === 0);
+    check('two remaining raises music speed and red intensity', caseAtmosphere(2).musicRate > 1 && caseAtmosphere(2).intensity === 0.5);
+    check('one remaining has maximum tension', caseAtmosphere(1).musicRate === 1.3 && caseAtmosphere(1).intensity === 1);
+    check('case atmosphere stays bounded', caseAtmosphere(0).intensity === 1 && caseAtmosphere(6).intensity === 0);
 }
 
 // ---------------------------------------------------------------------------

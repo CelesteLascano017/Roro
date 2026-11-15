@@ -18,9 +18,9 @@ export const DETECTIVE_STATE = Object.freeze({
  *   WAITING ──start──▶ ENTERING ──entry pause over──▶ INSPECTING
  *   INSPECTING ──route done (routes 1-3)──▶ INTERVIEWING ──dialogue over──▶ INSPECTING (next route)
  *   INSPECTING ──route 4 done──▶ FINISHED
- *   INSPECTING ──decisive evidence found──▶ CAUGHT
+ *   INSPECTING ──case solved──▶ CAUGHT
  *   INSPECTING / RETURNING ──distraction──▶ REDIRECTED ──investigation over──▶ RETURNING ──back on route──▶ INSPECTING
- *   REDIRECTED ──decisive evidence found near the distraction──▶ CAUGHT
+ *   REDIRECTED ──case solved near the distraction──▶ CAUGHT
  */
 export const DETECTIVE_TRANSITIONS = Object.freeze({
     [DETECTIVE_STATE.WAITING]: [DETECTIVE_STATE.ENTERING],
@@ -41,6 +41,7 @@ export const DETECTIVE_EVENTS = Object.freeze({
     INTERVIEW_REQUESTED: 'interviewRequested',
     DISTRACTED: 'distracted',
     EVIDENCE_DISCOVERED: 'evidenceDiscovered',
+    CASE_PROGRESS: 'caseProgress',
     VISIT_FINISHED: 'visitFinished',
     TRANSITION_REJECTED: 'transitionRejected'
 });
@@ -287,16 +288,20 @@ export class DetectiveStateMachine extends SimpleEmitter {
     }
 
     /**
-     * Marks discovered evidence. Returns true when a decisive object was
-     * found (the FSM has then moved to CAUGHT).
+     * The visit ends when enough distinct evidence objects have been discovered.
      */
     handleDiscoveries(discoveries, point) {
         if (discoveries.length === 0) {
             return false;
         }
-        discoveries.forEach(({ item }) => this.evidence.markDiscovered(item.id));
-        const decisive = discoveries.filter(({ item }) => item.definition.decisive);
-        if (decisive.length > 0) {
+        if (!this.isActive()) return false;
+        const newlyFound = discoveries.filter(({ item }) => this.evidence.markDiscovered(item.id));
+        if (newlyFound.length === 0) return false;
+        for (const { item, hidingSpot } of newlyFound) hidingSpot?.remove(item.id);
+        const decisive = newlyFound.filter(({ item }) => item.definition.decisive);
+        const progress = this.evidence.getCaseProgress();
+        this.emit(DETECTIVE_EVENTS.CASE_PROGRESS, { discoveries: newlyFound, point, progress });
+        if (decisive.length > 0 && progress.remaining === 0) {
             this.transition(DETECTIVE_STATE.CAUGHT, { discoveries: decisive, point });
             return true;
         }

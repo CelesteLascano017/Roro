@@ -38,9 +38,9 @@ Each successfully hidden object awards one point.
 
 **Maximum score: 6 points.**
 
-The player wins if the detective finishes the visit without discovering decisive evidence.
+The player wins if the detective finishes the visit before enough evidence is found to solve the case.
 
-The player loses if the detective discovers decisive evidence and catches Roro.
+The player loses when the detective solves the case: three evidence objects on Easy, two on Normal or one on Hard.
 
 ## 4. Visual Direction
 
@@ -190,9 +190,9 @@ The detective follows predefined inspection routes.
 
 The detective can inspect locations containing evidence.
 
-If the detective discovers decisive evidence, the player loses.
+The detective needs three distinct evidence objects on Easy, two on Normal and one on Hard. Reaching that threshold ends the game.
 
-If the detective finishes the visit without discovering decisive evidence, the player wins.
+If the detective finishes the visit before enough evidence is found to solve the case, the player wins.
 
 ### 10.3 Distractions
 
@@ -276,11 +276,11 @@ There are only two possible outcomes.
 
 ### Victory
 
-The detective finishes the visit without discovering decisive evidence.
+The detective finishes the visit before enough evidence is found to solve the case.
 
 ### Defeat
 
-The detective discovers decisive evidence and catches Roro.
+The detective finds enough distinct evidence objects to solve the case.
 
 ## 16. Game Flow
 
@@ -292,7 +292,7 @@ The detective discovers decisive evidence and catches Roro.
 6. The detective begins inspecting the apartment.
 7. The player searches for and hides evidence.
 8. The detective follows inspection routes and may conduct interviews.
-9. The detective either finishes the visit or discovers decisive evidence.
+9. The detective either finishes the visit or finds enough evidence to solve the case.
 10. Victory or defeat screen.
 11. Option to restart or return to the main menu.
 
@@ -328,3 +328,7 @@ Development should proceed incrementally:
 8. Dialogue interface.
 9. Audio.
 10. Menus, polish, and persistence.
+
+## Case pressure
+
+The case counter replaces any life display. Easy requires 3 distinct evidence objects, Normal 2, Hard 1. Discoveries below the threshold do not interrupt inspection. The same object cannot count twice. Fewer remaining objects increase gameplay music speed (1.0, 1.15, 1.3) and the intensity of a slow red vignette and subtle tint. Visibility, detective routes and speed remain unchanged. HUD and prompts remain readable above the filter. Case progress survives pause and interviews and resets on restart. Rest music stays at 0.75.

@@ -174,18 +174,21 @@ export const OPTIONAL_IMAGES = [
 export const AUDIO_TYPE = Object.freeze({ MUSIC: 'music', SFX: 'sfx' });
 
 export const AUDIO_ASSETS = [
-    { key: 'music-ambience', path: 'assets/audio/music/ambience.mp3', type: AUDIO_TYPE.MUSIC, purpose: 'Background ambience (gameplay)' },
-    { key: 'music-menu', path: 'assets/audio/music/menu.mp3', type: AUDIO_TYPE.MUSIC, purpose: 'Menu music' },
-    { key: 'sfx-step-roro', path: 'assets/audio/sfx/footstep_roro.mp3', type: AUDIO_TYPE.SFX, purpose: 'Roro footsteps' },
-    { key: 'sfx-step-detective', path: 'assets/audio/sfx/footstep_detective.mp3', type: AUDIO_TYPE.SFX, purpose: 'Detective footsteps (location cue)' },
-    { key: 'sfx-knock', path: 'assets/audio/sfx/door_knock.mp3', type: AUDIO_TYPE.SFX, purpose: 'Police knocking on the door' },
-    { key: 'sfx-door-open', path: 'assets/audio/sfx/door_open.mp3', type: AUDIO_TYPE.SFX, purpose: 'Door opening' },
-    { key: 'sfx-door-close', path: 'assets/audio/sfx/door_close.mp3', type: AUDIO_TYPE.SFX, purpose: 'Door closing' },
-    { key: 'sfx-interact', path: 'assets/audio/sfx/interact.mp3', type: AUDIO_TYPE.SFX, purpose: 'Picking up / hiding an object' },
-    { key: 'sfx-kettle', path: 'assets/audio/sfx/kettle_whistle.mp3', type: AUDIO_TYPE.SFX, purpose: 'Kettle whistle (distraction)' },
-    { key: 'sfx-ui', path: 'assets/audio/sfx/ui_select.mp3', type: AUDIO_TYPE.SFX, purpose: 'Menu selection' },
-    { key: 'sfx-victory', path: 'assets/audio/sfx/victory.mp3', type: AUDIO_TYPE.SFX, purpose: 'Victory jingle' },
-    { key: 'sfx-defeat', path: 'assets/audio/sfx/defeat.mp3', type: AUDIO_TYPE.SFX, purpose: 'Defeat sting' }
+    { key: 'music-ambience', path: 'assets/sounds/suspenseful.mp3', type: AUDIO_TYPE.MUSIC, purpose: 'Background ambience (gameplay)' },
+    { key: 'music-menu', path: 'assets/sounds/menu_sound.mp3', type: AUDIO_TYPE.MUSIC, purpose: 'Menu music' },
+    { key: 'music-rest', path: 'assets/sounds/rest_sound.mp3', type: AUDIO_TYPE.MUSIC, purpose: 'Music outside the main menu and active gameplay' },
+    { key: 'sfx-step-roro', path: 'assets/sounds/footstep_roro.wav', type: AUDIO_TYPE.SFX, purpose: 'Roro footsteps' },
+    { key: 'sfx-step-detective', path: 'assets/sounds/footstep_detective.wav', type: AUDIO_TYPE.SFX, purpose: 'Detective footsteps (location cue)' },
+    { key: 'sfx-knock', path: 'assets/sounds/door_knock.wav', type: AUDIO_TYPE.SFX, purpose: 'Police knocking on the door' },
+    { key: 'sfx-door-open', path: 'assets/sounds/door_open.wav', type: AUDIO_TYPE.SFX, purpose: 'Door opening' },
+    { key: 'sfx-door-close', path: 'assets/sounds/door_close.wav', type: AUDIO_TYPE.SFX, purpose: 'Door closing' },
+    { key: 'sfx-pickup', path: 'assets/sounds/item_pickup.wav', type: AUDIO_TYPE.SFX, purpose: 'Picking up or retrieving evidence' },
+    { key: 'sfx-hide', path: 'assets/sounds/item_hide.wav', type: AUDIO_TYPE.SFX, purpose: 'Successfully hiding evidence' },
+    { key: 'sfx-interact', path: 'assets/sounds/paper_rustle.wav', type: AUDIO_TYPE.SFX, purpose: 'Paper rustle when reading the note' },
+    { key: 'sfx-kettle', path: 'assets/sounds/kettle_whistle.wav', type: AUDIO_TYPE.SFX, purpose: 'Kettle whistle (distraction)' },
+    { key: 'sfx-ui', path: 'assets/sounds/ui_select.wav', type: AUDIO_TYPE.SFX, purpose: 'Menu selection' },
+    { key: 'sfx-victory', path: 'assets/sounds/victory.wav', type: AUDIO_TYPE.SFX, purpose: 'Victory jingle' },
+    { key: 'sfx-defeat', path: 'assets/sounds/defeat.wav', type: AUDIO_TYPE.SFX, purpose: 'Defeat sting' }
 ];
 
 export const FONT_ASSETS = [

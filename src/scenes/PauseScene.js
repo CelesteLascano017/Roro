@@ -1,7 +1,9 @@
+import { t } from '../managers/LanguageManager.js';
 import Phaser from 'phaser';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../data/gameConfig.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { Button, ButtonList } from '../ui/Button.js';
+import { VolumeSlider } from '../ui/VolumeSlider.js';
 import { TEXT_STYLES, textStyle } from '../ui/textStyles.js';
 
 /**
@@ -14,36 +16,27 @@ export class PauseScene extends Phaser.Scene {
     }
 
     create() {
+        AudioManager.playMusic('music-rest');
         this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7).setOrigin(0, 0);
         this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 360, 400, COLORS.panel, 0.97).setStrokeStyle(3, COLORS.panelBorder);
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 160, 'PAUSED', TEXT_STYLES.heading).setOrigin(0.5);
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 160, t('PAUSED'), TEXT_STYLES.heading).setOrigin(0.5);
 
         const centerX = GAME_WIDTH / 2;
-        let y = GAME_HEIGHT / 2 - 100;
+        const y = GAME_HEIGHT / 2 - 100;
         const step = 48;
         this.soundButton = new Button(this, centerX, y + step * 3, '', () => {
             AudioManager.toggleMute();
             this.refreshAudioLabels();
         });
-        this.volumeButton = new Button(this, centerX, y + step * 4, '', () => {
-            // Cycles the master volume of music and effects: 100% -> 75% -> 50% -> 25%.
-            const levels = [1, 0.75, 0.5, 0.25];
-            const current = AudioManager.getSettings().sfxVolume;
-            const next = levels[(levels.findIndex((level) => Math.abs(level - current) < 0.01) + 1) % levels.length] ?? 1;
-            AudioManager.setSfxVolume(next);
-            AudioManager.setMusicVolume(next * 0.6);
-            this.refreshAudioLabels();
-        });
+        this.volumeSlider = new VolumeSlider(this, centerX, y + step * 4 + 28);
 
         const buttons = [
-            new Button(this, centerX, y, 'Resume', () => this.resumeGame()),
-            new Button(this, centerX, y + step, 'Restart', () => this.restartGame()),
-            new Button(this, centerX, y + step * 2, 'Main menu', () => this.goToMenu()),
-            this.soundButton,
-            this.volumeButton
+            new Button(this, centerX, y, t('Resume'), () => this.resumeGame()),
+            new Button(this, centerX, y + step, t('Restart'), () => this.restartGame()),
+            new Button(this, centerX, y + step * 2, t('Main menu'), () => this.goToMenu()),
+            this.soundButton
         ];
-        y += step * 5;
-        this.add.text(centerX, y + 6, 'ESC: resume', textStyle({ color: COLORS.textMuted })).setOrigin(0.5);
+        this.add.text(centerX, GAME_HEIGHT / 2 + 176, t('ESC: resume'), textStyle({ color: COLORS.textMuted })).setOrigin(0.5);
 
         new ButtonList(this, buttons);
         this.refreshAudioLabels();
@@ -52,8 +45,7 @@ export class PauseScene extends Phaser.Scene {
 
     refreshAudioLabels() {
         const settings = AudioManager.getSettings();
-        this.soundButton.setText(settings.muted ? 'Sound: OFF' : 'Sound: ON');
-        this.volumeButton.setText(`Volume: ${Math.round(settings.sfxVolume * 100)}%`);
+        this.soundButton.setText(settings.muted ? t('Sound: OFF') : t('Sound: ON'));
     }
 
     resumeGame() {

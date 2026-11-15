@@ -8,7 +8,7 @@ const AUDIO_TYPES_BY_KEY = new Map(AUDIO_ASSETS.map((asset) => [asset.key, asset
  *
  * - Uses the game-wide Phaser sound manager, so music survives scene changes.
  * - Every play request first checks that the file was actually loaded. Audio
- *   files are not available yet; missing sounds are skipped silently, so the
+ *   files may be unavailable; missing sounds are skipped silently, so the
  *   game runs without errors and the real files can be dropped in later at
  *   the paths declared in assetManifest.js.
  * - Settings (mute, volumes) are persisted through SaveManager.
@@ -39,8 +39,9 @@ class AudioManagerClass {
 
     // ------------------------------------------------------------------ music
 
-    playMusic(key, { loop = true } = {}) {
+    playMusic(key, { loop = true, rate = key === 'music-rest' ? 0.75 : 1 } = {}) {
         if (this.currentMusicKey === key && this.currentMusic?.isPlaying) {
+            this.currentMusic.setRate(rate);
             return;
         }
         this.stopMusic();
@@ -49,7 +50,11 @@ class AudioManagerClass {
             return;
         }
         try {
-            this.currentMusic = this.game.sound.add(key, { loop, volume: this.settings.musicVolume });
+            this.currentMusic = this.game.sound.add(key, {
+                loop,
+                volume: this.settings.musicVolume,
+                rate
+            });
             this.currentMusic.play();
         } catch (error) {
             console.warn(`[AudioManager] Could not play music "${key}".`, error);
@@ -100,10 +105,10 @@ class AudioManagerClass {
     playPositionalSfx(key, source, listener, hearingDistance) {
         const dx = source.x - listener.x;
         const distance = Math.hypot(dx, source.y - listener.y);
-        if (distance > hearingDistance) {
+        if (hearingDistance <= 0 || distance >= hearingDistance) {
             return;
         }
-        const volume = 1 - (distance / hearingDistance) * 0.85;
+        const volume = 1 - distance / hearingDistance;
         this.playSfx(key, { volume, pan: dx / (hearingDistance * 0.6), detune: (Math.random() - 0.5) * 100 });
     }
 
@@ -126,6 +131,15 @@ class AudioManagerClass {
     toggleMute() {
         this.setMuted(!this.settings.muted);
         return this.settings.muted;
+    }
+
+    /** One control for effects and music; retain the softer music balance. */
+    setVolume(volume) {
+        const level = Math.max(0, Math.min(1, volume));
+        this.settings.sfxVolume = level;
+        this.settings.musicVolume = level * 0.6;
+        this.currentMusic?.setVolume(this.settings.musicVolume);
+        this.persist();
     }
 
     setMusicVolume(volume) {

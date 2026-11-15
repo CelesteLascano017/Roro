@@ -9,7 +9,7 @@ export class VictoryScene extends ResultScene {
             color: COLORS.success,
             message: (result) => (result.score === result.maxScore
                 ? 'The detective found nothing. Every trace is gone.\nThe routine is complete. Until next month.'
-                : 'The detective left without proof.\nBut not everything was hidden...')
+                : 'The detective left before solving the case.\nBut not everything was hidden...')
         });
     }
 }

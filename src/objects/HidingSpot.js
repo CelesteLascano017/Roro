@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { InteractiveObject } from './InteractiveObject.js';
 
 /**
@@ -76,11 +77,11 @@ export class HidingSpot extends InteractiveObject {
         const carried = evidence.getCarriedItem();
         if (carried) {
             return this.hasCapacity()
-                ? `Hide the ${carried.definition.name} ${this.name}`
-                : `Something is already hidden ${this.name}`;
+                ? t("Hide the {name} {place}", { name: t(carried.definition.name), place: t(this.name) })
+                : t("Something is already hidden {place}", { place: t(this.name) });
         }
         const storedItem = evidence.getItem(this.storedEvidenceIds[0]);
-        return `Take back the ${storedItem.definition.name}`;
+        return t("Take back the {name}", { name: t(storedItem.definition.name) });
     }
 
     interact(context) {

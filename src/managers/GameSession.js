@@ -25,12 +25,13 @@ class GameSessionClass {
     }
 
     /** Stores the outcome of a finished game and updates persistent records. */
-    finishGame({ won, score, maxScore, reason = null }) {
+    finishGame({ won, score, maxScore, caseProgress, reason = null }) {
         const { newHighScore } = SaveManager.recordResult({ score, difficulty: this.difficulty, won });
         this.lastResult = {
             won,
             score,
             maxScore,
+            caseProgress,
             reason,
             difficulty: this.difficulty,
             newHighScore,

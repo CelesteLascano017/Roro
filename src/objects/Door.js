@@ -1,3 +1,4 @@
+import { t } from '../managers/LanguageManager.js';
 import { DEPTH } from '../data/gameConfig.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { InteractiveObject } from './InteractiveObject.js';
@@ -85,9 +86,9 @@ export class Door extends InteractiveObject {
 
     getPrompt() {
         if (!this.isOpen) {
-            return 'Open the door';
+            return t('Open the door');
         }
-        return this.isRectOccupied(this.rect) ? 'Someone is in the doorway' : 'Close the door';
+        return this.isRectOccupied(this.rect) ? t('Someone is in the doorway') : t('Close the door');
     }
 
     interact() {
