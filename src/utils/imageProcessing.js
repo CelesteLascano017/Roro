@@ -1,13 +1,13 @@
 /**
- * Canvas helpers used at load time to prepare the provided PNG files.
- *
- * The cropped character/object images have an opaque background baked in.
- * Instead of editing the original files, the background is removed in memory:
- * a flood fill starts at the image border and clears every connected pixel
- * whose colour matches one of the background colours. Interior pixels of the
- * same colour (for example dark outlines) are kept because they are not
- * connected to the border.
- */
+* Funciones auxiliares para Canvas, utilizadas durante la carga para preparar los archivos PNG proporcionados. 
+*
+* Las imágenes recortadas de personajes u objetos incluyen un fondo opaco integrado.
+* En lugar de modificar los archivos originales, el fondo se elimina en memoria:
+* se realiza un relleno por inundación (flood fill) desde el borde de la imagen,
+* eliminando todos los píxeles conectados cuyo color coincida con alguno de los colores del fondo. 
+* Los píxeles interiores del mismo color (por ejemplo, los contornos oscuros) se conservan,
+* ya que no están conectados con el borde. 
+*/
 
 function createCanvas(width, height) {
     const canvas = document.createElement('canvas');
@@ -23,7 +23,7 @@ export function imageToCanvas(image) {
     return canvas;
 }
 
-/** Clears border-connected background pixels. Mutates the canvas. */
+/** Elimina los píxeles del fondo conectados al borde. Modifica el lienzo. */
 export function removeBackground(canvas, backgroundColors, tolerance = 3) {
     const { width, height } = canvas;
     const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -73,7 +73,7 @@ export function removeBackground(canvas, backgroundColors, tolerance = 3) {
     return canvas;
 }
 
-/** Returns the bounding box of non-transparent pixels, or null if empty. */
+/** Devuelve el cuadro delimitador de los píxeles no transparentes, o null si está vacío. */
 export function getContentBounds(canvas) {
     const { width, height } = canvas;
     const pixels = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height).data;
@@ -136,9 +136,10 @@ export function resizeNearest(canvas, scale) {
 }
 
 /**
- * Pads a canvas to the given size, centred horizontally and aligned to the
- * bottom (the character's feet).
- */
+* Ajusta el tamaño de un lienzo al valor indicado, centrándolo horizontalmente
+* y alineándolo en la parte inferior (donde se sitúan los pies del personaje). 
+*/
+
 export function padToSize(canvas, width, height) {
     if (canvas.width === width && canvas.height === height) {
         return canvas;
