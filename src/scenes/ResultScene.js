@@ -35,6 +35,11 @@ export class ResultScene extends Phaser.Scene {
         const highScoreText = result.newHighScore ? t('New best score!') : t("Best score: {score} / {max}", { score: result.highScore, max: result.maxScore });
         this.add.text(centerX, 292, t("{difficulty}  -  {scoreText}", { difficulty: difficultyLabel, scoreText: highScoreText }), textStyle({ color: result.newHighScore ? COLORS.accent : COLORS.textMuted })).setOrigin(0.5);
 
+        if (result.caseProgress) {
+            this.add.text(centerX, 330, t('Case evidence: {found}/{required}', result.caseProgress),
+                textStyle({ color: result.won ? COLORS.textMuted : COLORS.danger })).setOrigin(0.5);
+        }
+
         const buttons = [
             new Button(this, centerX, 370, t('Restart'), () => fadeToScene(this, SCENE_KEYS.APARTMENT)),
             new Button(this, centerX, 420, t('Main menu'), () => fadeToScene(this, SCENE_KEYS.MAIN_MENU))

@@ -39,8 +39,9 @@ class AudioManagerClass {
 
     // ------------------------------------------------------------------ music
 
-    playMusic(key, { loop = true } = {}) {
+    playMusic(key, { loop = true, rate = key === 'music-rest' ? 0.75 : 1 } = {}) {
         if (this.currentMusicKey === key && this.currentMusic?.isPlaying) {
+            this.currentMusic.setRate(rate);
             return;
         }
         this.stopMusic();
@@ -52,7 +53,7 @@ class AudioManagerClass {
             this.currentMusic = this.game.sound.add(key, {
                 loop,
                 volume: this.settings.musicVolume,
-                rate: key === 'music-rest' ? 0.75 : 1
+                rate
             });
             this.currentMusic.play();
         } catch (error) {

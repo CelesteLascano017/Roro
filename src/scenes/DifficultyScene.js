@@ -36,11 +36,11 @@ export class DifficultyScene extends Phaser.Scene {
         list.select = (index) => {
             originalSelect(index);
             const difficulty = order[index];
-            description.setText(difficulty ? t(DIFFICULTY_SETTINGS[difficulty].description) : t('Return to the main menu.'));
+            description.setText(difficulty ? t(DIFFICULTY_SETTINGS[difficulty].description) + '\n' + t('Evidence to solve the case: {required}', { required: DIFFICULTY_SETTINGS[difficulty].evidenceToSolve }) : t('Return to the main menu.'));
         };
         list.select(Math.max(0, order.indexOf(GameSession.difficulty)));
 
         this.input.keyboard.on('keydown-ESC', () => fadeToScene(this, SCENE_KEYS.MAIN_MENU));
-        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, t('Difficulty only changes what you can see. The detective behaves the same.'), textStyle({ color: COLORS.textMuted })).setOrigin(0.5);
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 30, t('Difficulty changes visibility and evidence needed to solve the case.'), textStyle({ color: COLORS.textMuted })).setOrigin(0.5);
     }
 }

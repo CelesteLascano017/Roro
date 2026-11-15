@@ -14,7 +14,7 @@ export const EVIDENCE_TYPE = Object.freeze({
  * - NOT_FOUND:  lying somewhere in the apartment, visible.
  * - CARRIED:    in Roro's hands.
  * - HIDDEN:     stored in a hiding place (counts for the score).
- * - DISCOVERED: found by the detective (ends the game).
+ * - DISCOVERED: found by the detective (advances the case).
  */
 export const EVIDENCE_STATE = Object.freeze({
     NOT_FOUND: 'notFound',
@@ -26,7 +26,7 @@ export const EVIDENCE_STATE = Object.freeze({
 /**
  * - `spawn`: 'random' picks from BELONGING_SPAWN_POINTS; otherwise a key of
  *   FIXED_SPAWN_POINTS (apartmentData.js).
- * - `decisive`: discovering it makes the detective arrest Roro.
+ * - `decisive`: counts toward the evidence needed to solve the case.
  *   GAME_DESIGN.md does not say which objects are decisive, so all six are.
  */
 export const EVIDENCE_ITEMS = [

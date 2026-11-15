@@ -38,6 +38,10 @@ export class HUD {
         this.muteButton = new MuteButton(scene, GAME_WIDTH - 66, 18, { fixed: true });
         objects.push(this.muteButton);
 
+        const caseBar = scene.add.rectangle(6, 40, 422, 26, 0x0d0b12, 0.85).setOrigin(0, 0);
+        this.caseText = scene.add.text(12, 45, '', TEXT_STYLES.hud);
+        objects.push(caseBar, this.caseText);
+
         this.carryText = scene.add.text(12, GAME_HEIGHT - 28, '', TEXT_STYLES.hud);
         objects.push(this.carryText);
 
@@ -65,6 +69,11 @@ export class HUD {
     setScore(score) {
         this.scoreText.setText(t("HIDDEN {score} / {max}", { score: score, max: this.maxScore }));
         this.pips.forEach((pip, index) => pip.setFillStyle(index < score ? COLORS.accentHex : 0x2c2536));
+    }
+
+    setCaseProgress({ found, required, remaining }) {
+        this.caseText.setText(t('CASE: {found}/{required} | STILL NEEDED: {remaining}', { found, required, remaining }));
+        this.caseText.setColor(remaining <= 1 ? COLORS.danger : COLORS.accent);
     }
 
     setPhase(text) {

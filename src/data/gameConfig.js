@@ -41,17 +41,19 @@ export const VISIBILITY_MODE = Object.freeze({
 });
 
 /**
- * Difficulty changes visibility only. The detective behaves the
+ * Difficulty changes visibility and evidence needed to solve the case. The detective behaves the
  * same in every mode, as defined in GAME_DESIGN.md (section 11).
  */
 export const DIFFICULTY_SETTINGS = Object.freeze({
     [DIFFICULTY.EASY]: {
         label: 'Easy',
+        evidenceToSolve: 3,
         description: 'The whole apartment is visible.\nYou can see the detective at all times.',
         visibility: VISIBILITY_MODE.FULL
     },
     [DIFFICULTY.NORMAL]: {
         label: 'Normal',
+        evidenceToSolve: 2,
         description: 'Only the room you are in is visible.\nListen for the detective\'s footsteps.',
         visibility: VISIBILITY_MODE.ROOM,
         // Darkness applied to the rooms Roro is not in (0 = none, 1 = black).
@@ -59,6 +61,7 @@ export const DIFFICULTY_SETTINGS = Object.freeze({
     },
     [DIFFICULTY.HARD]: {
         label: 'Hard',
+        evidenceToSolve: 1,
         description: 'You only see a small circle around Roro.\nListen for the detective\'s footsteps.',
         visibility: VISIBILITY_MODE.RADIUS,
         obscuredAlpha: 0.985,

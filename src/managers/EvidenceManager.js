@@ -29,9 +29,10 @@ export const EVIDENCE_EVENTS = Object.freeze({
  * Pure logic (no Phaser) so it can be tested in Node.
  */
 export class EvidenceManager extends SimpleEmitter {
-    constructor(definitions, rules = HIDING_RULES) {
+    constructor(definitions, rules = HIDING_RULES, evidenceToSolve = 3) {
         super();
         this.rules = rules;
+        this.evidenceToSolve = evidenceToSolve;
         this.items = new Map(definitions.map((definition) => [definition.id, {
             id: definition.id,
             definition,
@@ -84,6 +85,12 @@ export class EvidenceManager extends SimpleEmitter {
     getScore() {
         const hidden = this.getAll().filter((item) => item.state === EVIDENCE_STATE.HIDDEN).length;
         return Math.min(hidden, SCORE_CONFIG.MAX_SCORE);
+    }
+
+    getCaseProgress() {
+        const discovered = this.getAll().filter(item => item.state === EVIDENCE_STATE.DISCOVERED && item.definition.decisive).length;
+        const found = Math.min(discovered, this.evidenceToSolve);
+        return { found, required: this.evidenceToSolve, remaining: Math.max(0, this.evidenceToSolve - found) };
     }
 
     getMaxScore() {

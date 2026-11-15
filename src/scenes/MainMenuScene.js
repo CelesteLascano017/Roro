@@ -20,7 +20,9 @@ const INSTRUCTIONS = [
     'to the most hidden ones, and interviews you between rounds.',
     'A place he has already searched is safe. You can move hidden',
     'objects again. Evidence left near him will be found.',
-    'Listen to his footsteps. The kettle can distract him.'
+    'Listen to his footsteps. The kettle can distract him.',
+    'The detective needs 3 objects on Easy, 2 on Normal, 1 on Hard.',
+    'Fewer objects left means faster music and stronger red edges.'
 ];
 
 /** Title screen: start, instructions, sound toggle and saved records. */

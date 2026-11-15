@@ -39,6 +39,8 @@ import { EvidenceItem } from '../objects/EvidenceItem.js';
 import { HidingSpot } from '../objects/HidingSpot.js';
 import { DistractionSource } from '../objects/DistractionSource.js';
 import { HUD } from '../ui/HUD.js';
+import { CasePressureOverlay } from '../ui/CasePressureOverlay.js';
+import { caseAtmosphere } from '../utils/caseAtmosphere.js';
 import { InteractionPrompt } from '../ui/InteractionPrompt.js';
 import { NoteInterface } from '../ui/NoteInterface.js';
 import { VisibilityOverlay } from '../ui/VisibilityOverlay.js';
@@ -88,7 +90,7 @@ export class ApartmentScene extends Phaser.Scene {
         this.events.on(Phaser.Scenes.Events.RESUME, this.onResume, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
 
-        AudioManager.playMusic('music-ambience');
+        this.updateCaseAtmosphere();
         this.hud.showMessage(t('The detective is at the door. Hide the evidence!'), { duration: 3200 });
         this.time.delayedCall(VISIT_START_DELAY, () => this.detectiveAI.start());
     }
@@ -143,7 +145,7 @@ export class ApartmentScene extends Phaser.Scene {
     }
 
     createEvidence() {
-        this.evidence = new EvidenceManager(EVIDENCE_ITEMS, HIDING_RULES);
+        this.evidence = new EvidenceManager(EVIDENCE_ITEMS, HIDING_RULES, this.difficultySettings.evidenceToSolve);
         this.evidenceItems = new Map();
         const spawnPoints = EvidenceManager.chooseSpawnPoints(EVIDENCE_ITEMS, BELONGING_SPAWN_POINTS, FIXED_SPAWN_POINTS);
 
@@ -196,6 +198,7 @@ export class ApartmentScene extends Phaser.Scene {
         this.prompt = new InteractionPrompt(this);
         this.noteInterface = new NoteInterface(this);
         this.visibility = new VisibilityOverlay(this, this.layout, this.difficultySettings);
+        this.casePressure = new CasePressureOverlay(this);
         const touch = TouchControls.isSupported(this);
         if (touch) {
             this.touchControls = new TouchControls(this, this.inputManager);
@@ -252,6 +255,7 @@ export class ApartmentScene extends Phaser.Scene {
         ai.on(DETECTIVE_EVENTS.INSPECTION_FINISHED, () => this.updatePhaseText());
         ai.on(DETECTIVE_EVENTS.DISTRACTED, () => this.hud.showMessage(t('The detective goes to check the noise.')));
         ai.on(DETECTIVE_EVENTS.INTERVIEW_REQUESTED, ({ interviewIndex }) => this.startInterview(interviewIndex));
+        ai.on(DETECTIVE_EVENTS.CASE_PROGRESS, (payload) => this.onCaseProgress(payload));
         ai.on(DETECTIVE_EVENTS.EVIDENCE_DISCOVERED, (payload) => this.onCaught(payload));
         ai.on(DETECTIVE_EVENTS.VISIT_FINISHED, () => this.onVisitFinished());
         ai.on(DETECTIVE_EVENTS.TRANSITION_REJECTED, ({ from, to }) => console.warn(`[Detective] Rejected transition ${from} -> ${to}`));
@@ -404,13 +408,33 @@ export class ApartmentScene extends Phaser.Scene {
     }
 
     onResume(_systems, data = {}) {
-        AudioManager.playMusic('music-ambience');
+        this.updateCaseAtmosphere();
         this.inputManager.reset();
         this.roro.setControlsEnabled(true);
         if (data.interviewCompleted) {
             this.detectiveAI.completeInterview();
             this.hud.showMessage(t('The detective goes back to searching.'));
         }
+    }
+
+    updateCaseAtmosphere() {
+        const progress = this.evidence.getCaseProgress();
+        const atmosphere = caseAtmosphere(progress.remaining);
+        this.hud.setCaseProgress(progress);
+        this.casePressure.setIntensity(atmosphere.intensity);
+        if (!this.gameOver && progress.remaining > 0) {
+            AudioManager.playMusic('music-ambience', { rate: atmosphere.musicRate });
+        }
+    }
+
+    onCaseProgress({ discoveries, progress }) {
+        this.updateCaseAtmosphere();
+        if (progress.remaining === 0) return;
+        const items = discoveries.map(({ item }) => t(item.definition.name)).join(', ');
+        this.hud.showMessage(t('Found: {items}. The detective needs {remaining} more to solve the case.', {
+            items, remaining: progress.remaining
+        }), { duration: 3600, color: COLORS.danger });
+        AudioManager.playSfx('sfx-defeat', { volume: 0.4 });
     }
 
     onCaught({ discoveries, point }) {
@@ -435,7 +459,7 @@ export class ApartmentScene extends Phaser.Scene {
         this.cameras.main.shake(400, 0.008);
         this.cameras.main.flash(300, 120, 0, 0);
 
-        GameSession.finishGame({ won: false, score: this.evidence.getScore(), maxScore: this.evidence.getMaxScore(), reason: message });
+        GameSession.finishGame({ won: false, score: this.evidence.getScore(), maxScore: this.evidence.getMaxScore(), caseProgress: this.evidence.getCaseProgress(), reason: message });
         this.time.delayedCall(END_SCREEN_DELAY, () => fadeToScene(this, SCENE_KEYS.DEFEAT, {}, 600));
     }
 
@@ -451,7 +475,7 @@ export class ApartmentScene extends Phaser.Scene {
         AudioManager.playMusic('music-rest');
         AudioManager.playSfx('sfx-victory');
 
-        GameSession.finishGame({ won: true, score: this.evidence.getScore(), maxScore: this.evidence.getMaxScore() });
+        GameSession.finishGame({ won: true, score: this.evidence.getScore(), maxScore: this.evidence.getMaxScore(), caseProgress: this.evidence.getCaseProgress() });
         this.time.delayedCall(END_SCREEN_DELAY, () => fadeToScene(this, SCENE_KEYS.VICTORY, {}, 600));
     }
 
@@ -460,5 +484,6 @@ export class ApartmentScene extends Phaser.Scene {
         this.detectiveAI?.removeAllListeners();
         this.evidence?.removeAllListeners();
         this.visibility?.destroy();
+        this.casePressure?.destroy();
     }
 }

@@ -1,5 +1,13 @@
 // English source strings and their Spanish translations.
 export const SPANISH = {
+    "CASE: {found}/{required} | STILL NEEDED: {remaining}": "CASO: {found}/{required} | FALTAN: {remaining}",
+    "Case evidence: {found}/{required}": "Evidencias del caso: {found}/{required}",
+    "Found: {items}. The detective needs {remaining} more to solve the case.": "Encontro: {items}. Necesita {remaining} mas para resolver el caso.",
+    "The detective needs 3 objects on Easy, 2 on Normal, 1 on Hard.": "El detective necesita 3 objetos en Facil, 2 en Normal y 1 en Dificil.",
+    "Fewer objects left means faster music and stronger red edges.": "Si faltan menos objetos, la musica acelera y el borde rojo se intensifica.",
+    "Evidence to solve the case: {required}": "Evidencias para resolver el caso: {required}",
+    "Difficulty changes visibility and evidence needed to solve the case.": "La dificultad cambia la visibilidad y las evidencias para resolver el caso.",
+    "The detective left before solving the case.\nBut not everything was hidden...": "El detective se fue sin resolver el caso.\nPero no todo estaba escondido...",
     "GAME OVER": "FIN DEL JUEGO",
     "Left / Right: volume": "Izquierda / Derecha: volumen",
     "Apartment": "Departamento",
