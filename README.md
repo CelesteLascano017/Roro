@@ -1,24 +1,17 @@
 <div align="center">
 
-# R O R O 
+# R O R O
 
 ### *Seis meses. Seis apagones. Un golpe en la puerta.*
 
-**Thriller psicológico · Sigilo · Aventura narrativa · 2D top-down · Pixel art**
+**Thriller psicológico · Sigilo · Aventura top-down · Pixel art**
 
 <br>
 
-![Phaser](https://img.shields.io/badge/Phaser-3.90.0-8A2BE2?style=for-the-badge&labelColor=14121b)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES_Modules-e0b354?style=for-the-badge&logo=javascript&logoColor=14121b&labelColor=14121b)
-![Vite](https://img.shields.io/badge/Vite-8.3.8-646CFF?style=for-the-badge&logo=vite&logoColor=white&labelColor=14121b)
-<br>
-![HTML5](https://img.shields.io/badge/HTML5-Canvas_/_WebGL-d65a5a?style=flat-square&logo=html5&logoColor=white&labelColor=14121b)
-![CSS3](https://img.shields.io/badge/CSS3-estilos-5a4a6e?style=flat-square&logo=css3&logoColor=white&labelColor=14121b)
-![Node.js](https://img.shields.io/badge/Node.js-%5E20.19_%7C_%E2%89%A522.12-7fc28a?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=14121b)
-![Idiomas](https://img.shields.io/badge/idiomas-ES_%7C_EN-a89bb5?style=flat-square&labelColor=14121b)
-![Plataforma](https://img.shields.io/badge/plataforma-navegador_web-f2e9dc?style=flat-square&labelColor=14121b)
+**https://roro.daxrpm.dev**
 
-<br>
+
+<img src="docs/screenshots/04-partida-facil.png" alt="Roro dentro de su apartamento mientras el detective entra" width="760">
 
 > *El detective ya está dentro del apartamento.*
 > *Encuentra las pruebas. Escóndelas. No dejes que encuentre suficientes.*
@@ -27,22 +20,61 @@
 
 ---
 
-##  Índice
+## Índice
 
-1. [Acerca del juego](#-acerca-del-juego)
-2. [Características](#-características)
-3. [Tecnologías utilizadas](#-tecnologías-utilizadas)
-4. [Instalación y ejecución](#-instalación-y-ejecución)
-5. [Controles](#-controles)
-6. [Estructura del proyecto](#-estructura-del-proyecto)
-7. [Arquitectura](#-arquitectura)
-8. [Recursos y créditos](#-recursos-y-créditos)
-9. [Equipo de desarrollo](#-equipo-de-desarrollo)
-10. [Estado del proyecto](#-estado-del-proyecto)
+1. [Demo y capturas](#-demo-y-capturas)
+2. [Acerca del juego](#-acerca-del-juego)
+3. [Características](#-características)
+4. [Tecnologías utilizadas](#-tecnologías-utilizadas)
+5. [Instalación y ejecución](#-instalación-y-ejecución)
+6. [Controles](#-controles)
+7. [Estructura del proyecto](#-estructura-del-proyecto)
+8. [Arquitectura](#-arquitectura)
+9. [Cumplimiento de la rúbrica](#-cumplimiento-de-la-rúbrica)
+10. [Recursos y créditos](#-recursos-y-créditos)
+11. [Equipo de desarrollo](#-equipo-de-desarrollo)
+12. [Estado del proyecto](#-estado-del-proyecto)
 
 ---
 
-## 🕯️ Acerca del juego
+## 🎬 Demo y capturas
+
+| | |
+|---|---|
+| 🌐 **Versión desplegada** | **<https://roro.daxrpm.dev>** (se juega directamente en el navegador, sin instalar nada) |
+| 📦 **Repositorio** | <https://github.com/CelesteLascano017/Roro> |
+
+
+### Capturas de pantalla
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/screenshots/01-menu.png" alt="Menú principal"><br><sub><b>1 · Menú principal</b><br>Idioma, sonido, récords y progreso guardados</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/02-dificultad.png" alt="Selección de dificultad"><br><sub><b>2 · Selección de dificultad</b><br>Fácil, Normal y Difícil</sub></td>
+<td align="center" width="33%"><img src="docs/screenshots/03-introduccion.png" alt="Introducción de la historia"><br><sub><b>3 · Introducción</b><br>Contexto narrativo</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/04-partida-facil.png" alt="Partida en dificultad Fácil"><br><sub><b>4 · Partida (Fácil)</b><br>HUD, pruebas, detective y apartamento visibles</sub></td>
+<td align="center"><img src="docs/screenshots/05-partida-dificil.png" alt="Partida en dificultad Difícil"><br><sub><b>5 · Partida (Difícil)</b><br>Visibilidad reducida y borde rojo de presión</sub></td>
+<td align="center"><img src="docs/screenshots/06-pausa.png" alt="Menú de pausa"><br><sub><b>6 · Pausa</b><br>Reanudar, reiniciar, menú, mute y volumen</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/07-interrogatorio.png" alt="Interrogatorio del detective"><br><sub><b>7 · Interrogatorio</b><br>Diálogo con retrato y texto progresivo</sub></td>
+<td align="center"><img src="docs/screenshots/08-victoria.png" alt="Pantalla de victoria"><br><sub><b>8 · Victoria</b><br>Puntuación, récord y reinicio</sub></td>
+<td align="center"><img src="docs/screenshots/09-derrota.png" alt="Pantalla de derrota"><br><sub><b>9 · Derrota</b><br>Game Over con reinicio y menú</sub></td>
+</tr>
+</table>
+
+### Versión móvil (controles táctiles)
+
+<div align="center">
+<img src="docs/screenshots/10-movil-tactil.png" alt="Controles táctiles en pantalla: cruceta, botón E y pausa" width="640">
+<br><sub>Cruceta, botón <b>E</b> y botón de pausa equivalentes al teclado.</sub>
+</div>
+
+---
+
+##  Acerca del juego
 
 ### La historia
 
@@ -51,6 +83,10 @@ Desde hace **seis meses**, Roro despierta cada mañana sin recordar nada de la n
 Con el tiempo, Roro ha aprendido una rutina: **encontrarlo todo, esconderlo todo y olvidar**.
 
 Pero este es el sexto mes, y esta vez alguien llama a la puerta antes de que la rutina termine. Es la policía. Un detective entra al apartamento para investigar una muerte en el edificio.
+
+### Arquetipo elegido
+
+**Top-Down Adventure / RTS Lite**: movimiento libre, IA con *pathfinding*, recolección de objetos y un enemigo dinámico (el detective) que sigue rondas de inspección.
 
 ### El objetivo
 
@@ -64,6 +100,13 @@ Controlas a Roro dentro de su apartamento. Debes **encontrar y esconder seis pru
 
 Cada prueba escondida suma **1 punto** (máximo **6**).
 
+### Condiciones de victoria y derrota
+
+| Resultado | Condición |
+|---|---|
+| 🟢 **Victoria** | El detective termina sus cuatro rondas sin reunir las pruebas necesarias para resolver el caso |
+| 🔴 **Derrota** | El detective descubre las pruebas necesarias (3 en Fácil, 2 en Normal, 1 en Difícil) y Roro es atrapado |
+
 ### Mecánicas principales
 
 - **Llevar y esconder.** Roro solo puede cargar **un objeto a la vez**. Debe llevarlo a uno de los **16 escondites** del apartamento y pulsar `E`. Los objetos escondidos pueden recuperarse y moverse a otro lugar (el punto se resta y se vuelve a sumar).
@@ -76,18 +119,17 @@ Cada prueba escondida suma **1 punto** (máximo **6**).
 
   El orden de los puntos se mezcla en cada partida y, tras cada una de las tres primeras rondas, **interroga a Roro**.
 - **Cuándo encuentra pruebas.** Cada escondite se registra **una sola vez**: un lugar ya revisado es seguro. Una prueba se descubre si está en el escondite que el detective registra o si está a la vista cerca de él mientras busca. Las pruebas que Roro lleva en las manos nunca se descubren.
-- **Presión del caso.** Cada prueba descubierta acerca al detective a la solución. Necesita **3 en Fácil, 2 en Normal y 1 en Difícil**. Cuantas menos le faltan, más rápida suena la música y más intenso es el borde rojo de la pantalla.
+- **Presión del caso.** Cada prueba descubierta acerca al detective a la solución. Cuantas menos le faltan, más rápida suena la música y más intenso es el borde rojo de la pantalla.
 - **Distracción.** La tetera de la cocina silba tras unos segundos y atrae al detective. Al terminar de revisarla, vuelve exactamente al punto de su ruta donde lo dejó. Tiene un tiempo de espera de 30 s.
 - **Puertas.** Roro puede abrir y cerrar las puertas interiores. El detective abre las que encuentra cerradas en su camino.
-- **Final.** Si el detective termina su visita sin resolver el caso, **Roro gana**. Si reúne las pruebas necesarias, Roro es **atrapado**.
 
 ### Dificultades
 
 | Modo | Visibilidad | Pruebas para resolver el caso |
 |---|---|:---:|
-|  **Fácil** | Todo el apartamento y el detective, en todo momento | 3 |
-|  **Normal** | Solo la habitación donde está Roro (las dos, si está en una puerta) | 2 |
-|  **Difícil** | Solo un pequeño círculo alrededor de Roro | 1 |
+| 🟢 **Fácil** | Todo el apartamento y el detective, en todo momento | 3 |
+| 🟡 **Normal** | Solo la habitación donde está Roro (las dos, si está en una puerta) | 2 |
+| 🔴 **Difícil** | Solo un pequeño círculo alrededor de Roro | 1 |
 
 En Normal y Difícil el detective deja de verse fuera de la zona visible. Sus **pasos** se escuchan cuando está cerca (hasta unas tres casillas) y su sonido se desplaza a la izquierda o a la derecha según su posición.
 
@@ -101,7 +143,7 @@ Todas las funcionalidades de esta lista están implementadas en el código actua
 <tr>
 <td valign="top" width="50%">
 
-** Jugabilidad**
+**🎮 Jugabilidad**
 - Movimiento en 8 direcciones con velocidad diagonal normalizada
 - Sprites con orientación frontal, trasera y lateral (espejada a la izquierda)
 - Sistema de interacción unificado con `E`: siempre actúa sobre el objeto más cercano
@@ -112,7 +154,7 @@ Todas las funcionalidades de esta lista están implementadas en el código actua
 </td>
 <td valign="top" width="50%">
 
-** Inteligencia artificial**
+**🧠 Inteligencia artificial**
 - Máquina de estados finitos con 8 estados: *Waiting*, *Entering*, *Inspecting*, *Interviewing*, *Redirected*, *Returning*, *Finished* y *Caught*
 - Tabla explícita de transiciones permitidas
 - Navegación A* sobre una cuadrícula de casillas transitables, sin atravesar paredes ni muebles
@@ -124,17 +166,17 @@ Todas las funcionalidades de esta lista están implementadas en el código actua
 <tr>
 <td valign="top">
 
-** Atmósfera y presentación**
+**🌑 Atmósfera y presentación**
 - Apartamento de 5 zonas (dormitorio, baño, cocina, pasillo y sala de estar) construido con el tileset
 - Superposición de oscuridad para los modos Normal y Difícil
-- Interrogatorios en una pantalla aparte con retrato, nombre y texto que aparece letra por letra (sin saltos ni opciones)
+- Interrogatorios en una pantalla aparte con retrato, nombre y texto que aparece letra por letra
 - Música que cambia según la escena y se acelera con la presión del caso
 - Efectos de sonido para pasos, puertas, objetos, tetera, menús, victoria y derrota
 
 </td>
 <td valign="top">
 
-** Sistema**
+**⚙️ Sistema**
 - Escenas de Phaser para cada estado del juego: menú, dificultad, introducción, partida, diálogo, pausa, victoria y derrota
 - Pausa con reanudar, reiniciar, menú principal, silencio y barra de volumen
 - Persistencia en `localStorage`: mejores puntuaciones, nivel alcanzado, estadísticas, dificultad, idioma y audio
@@ -165,6 +207,8 @@ Phaser es la única dependencia de ejecución y Vite la única de desarrollo (ve
 ---
 
 ##  Instalación y ejecución
+
+> ¿Solo quieres probarlo? Entra a **<https://roro.daxrpm.dev>**.
 
 ### Requisitos previos
 
@@ -211,7 +255,7 @@ Abre la dirección que muestra Vite en la terminal (por defecto, `http://localho
 
 ---
 
-## Controles
+## 🎮 Controles
 
 ### Teclado y ratón
 
@@ -238,16 +282,19 @@ Aparecen automáticamente en dispositivos táctiles, o con `?touch` en la URL.
 | Botón **II** (arriba a la derecha) | Pausar |
 | Toque en botones y en la barra de volumen | Igual que el clic del ratón |
 
+Las instrucciones también son visibles en el juego: la barra inferior de la partida y la opción **Cómo jugar** del menú principal.
+
 ---
 
-## Estructura del proyecto
+##  Estructura del proyecto
 
 ```text
 Roro/
 ├── index.html                  Página contenedora del juego
 ├── vite.config.js              Configuración de Vite y plugin que lista los recursos disponibles
 ├── package.json                Scripts y dependencias
-├── docs/                       Documento de diseño, requisitos, reglas, referencias e inventario de recursos
+├── docs/                       Diseño, requisitos, reglas, referencias, inventario de recursos y capturas
+│   └── screenshots/            Capturas usadas en este README
 ├── public/assets/              Recursos del juego (se sirven tal cual)
 │   ├── characters/             Sprites de Roro y del detective (idle y caminar en 3 direcciones)
 │   ├── environment/tilesets/   Tileset de interiores
@@ -278,11 +325,17 @@ Roro/
     └── utils/                  Procesamiento de imágenes, aleatoriedad, eventos y atmósfera del caso
 ```
 
+> Los recursos viven en `public/assets/` (en lugar de `src/assets/`) y el audio en `public/assets/sounds/` para que Vite los sirva tal cual y se carguen bajo demanda desde el *loader* de Phaser.
+
 ---
 
-## Arquitectura
+##  Arquitectura
 
 El juego separa **datos**, **lógica** y **presentación**. Toda la información editable (el apartamento, las rutas, los textos y los tiempos) vive en `src/data/`, y el resto del código la lee de ahí.
+
+```text
+Scene Manager ─▶ Game Objects ─▶ Physics ─▶ UI / HUD ─▶ Audio Manager ─▶ Storage Manager
+```
 
 ### Flujo de escenas
 
@@ -333,32 +386,94 @@ Las transiciones permitidas están en `DETECTIVE_TRANSITIONS` (`src/ai/Detective
 
 > El modelo del nivel, la navegación, las pruebas, las rutas y la máquina de estados no dependen de Phaser. Por eso `npm test` puede verificarlos directamente con Node.
 
+### Rendimiento
+
+- Carga de recursos con barra de progreso y procesamiento único al inicio (no por fotograma).
+- Cuerpos de colisión **estáticos** y navegación sobre una cuadrícula precalculada.
+- Medido en el navegador de escritorio del autor: **≈140 FPS** (el requisito es ≥ 45 FPS). En una prueba automatizada sin GPU (Chromium *headless* con renderizado por software) se midieron ≈47 FPS, aun así por encima del mínimo.
+
 ---
 
-##  Recursos y créditos
+##  Cumplimiento de la rúbrica
+
+### Requisitos técnicos obligatorios
+
+| Requisito | Estado | Dónde |
+|---|:---:|---|
+| Escenas Phaser, *loader*, menú, pausa, Game Over y reinicio | ✅ | `src/scenes/`, `managers/AssetManager` |
+| Sistema de estados | ✅ | `ai/DetectiveStateMachine`, `managers/GameSession`, estados de prueba |
+| Estructura modular (`scenes`, `objects`, `ui`, `managers`, `physics`) | ✅ | [Estructura](#-estructura-del-proyecto) |
+| Movimiento, colisiones, puntaje y HUD | ✅ | `objects/Roro`, `physics/`, `ui/HUD` |
+| Enemigo o reto | ✅ | Detective con IA, rondas e interrogatorios |
+| Condiciones de victoria y derrota | ✅ | `VictoryScene`, `DefeatScene` |
+| Arcade Physics: colisiones, *triggers*, *overlaps* | ✅ | `CollisionManager`, `RoomTriggerSystem` |
+| Música de fondo, ≥ 2 efectos y botón de mute | ✅ | 3 pistas, 12 efectos, tecla `M` y botón en menú, partida y pausa |
+| `localStorage`: High Score, nivel alcanzado y audio | ✅ | `managers/SaveManager`, `AudioManager` |
+| Escritorio (teclado/ratón) y móvil (táctil) | ✅ | `ui/TouchControls`, escalado `Phaser.Scale.FIT` |
+| ≥ 45 FPS y carga eficiente | ✅ | Ver [Rendimiento](#rendimiento) |
+| Accesibilidad mínima: contraste, instrucciones, controles, mute | ✅ | Barra de controles en partida, «Cómo jugar», mute |
+
+### Criterios de evaluación
+
+| Criterio (peso) | Evidencia |
+|---|---|
+| **Funcionalidad principal (20 %)** | Flujo completo de inicio a fin, jugable en <https://roro.daxrpm.dev> |
+| **Mecánicas de juego (15 %)** | Recolección, escondites, IA con *pathfinding*, rondas, distracción, puertas y tres dificultades (arquetipo Top-Down Adventure) |
+| **Física y colisiones (10 %)** | Arcade Physics con colisiones estáticas, *overlaps* para habitaciones e interacción |
+| **Arquitectura y modularidad (15 %)** | Datos / lógica / presentación separados; lógica sin dependencia de Phaser |
+| **Rendimiento (10 %)** | ≈140 FPS en escritorio; ver [Rendimiento](#rendimiento) |
+| **UX/UI (10 %)** | Menú, dificultad, HUD, pausa, interrogatorios y pantallas de resultado ([capturas](#-demo-y-capturas)) |
+| **Audio e inmersión (5 %)** | Música dinámica según la presión del caso, sonido posicional y mute |
+| **Responsividad y táctil (5 %)** | Escalado adaptable y controles táctiles equivalentes |
+| **Código limpio y documentación (5 %)** | Comentarios explicativos, nombres descriptivos y [`docs/`](docs/) |
+| **README, video y presentación (5 %)** | Este documento, [capturas](#-demo-y-capturas) y video demo (pendiente de enlazar) |
+
+### Bonus implementados
+
+| Bonus | Estado |
+|---|:---:|
+| IA avanzada (FSM + A* + recálculo de rutas) | ✅ |
+| Generación procedural (orden y ubicación aleatoria de rutas y pruebas) | ✅ |
+| Shader / efectos visuales (oscuridad, visibilidad circular, filtro rojo de presión) | ✅ (efectos de cámara y superposición, no *shaders* GLSL propios) |
+| Sistema de inventario (un objeto cargado a la vez) | ✅ (básico) |
+
+### Pruebas automáticas
+
+```bash
+npm test
+# 185 passed, 0 failed · idiomas OK · audio OK
+```
+
+### Documentación de diseño
+
+[`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) · [`docs/TECHNICAL_REQUIREMENTS.md`](docs/TECHNICAL_REQUIREMENTS.md) · [`docs/DEVELOPMENT_RULES.md`](docs/DEVELOPMENT_RULES.md) · [`docs/ASSETS.md`](docs/ASSETS.md) · [`docs/REFERENCES.md`](docs/REFERENCES.md)
+
+---
+
+## 🎨 Recursos y créditos
 
 ### Gráficos
 
 | Recurso | Autor | Fuente | Licencia |
 |---|---|---|---|
 | Personajes (Roro y el detective), *32 Free Animated Characters Pack* | Lexlom | [lexlom.itch.io](https://lexlom.itch.io/32-character-pack-pixel-art-4-direction-idle-walking) | CC0, según el autor (consta en `docs/ASSETS.md`) |
-| Tileset *Pixel Lands Interiors (demo)* | Trislin | [trislin.itch.io](https://trislin.itch.io/pixel-lands-interiors) |  Pendiente de verificar en la página original |
-| Pertenencias de la víctima y bate de béisbol |  Sin verificar | Paquete de objetos descargado; origen pendiente de registrar |  Sin verificar |
-| Nota y papel de la nota (`victim_note.png`, `name_victim.png`) |  Sin verificar | — |  Sin verificar |
+| Tileset *Pixel Lands Interiors (demo)* | Trislin | [trislin.itch.io](https://trislin.itch.io/pixel-lands-interiors) | ⚠️ Pendiente de verificar en la página original |
+| Pertenencias de la víctima y bate de béisbol | ⚠️ Sin verificar | Paquete de objetos descargado; origen pendiente de registrar | ⚠️ Sin verificar |
+| Nota y papel de la nota (`victim_note.png`, `name_victim.png`) | ⚠️ Sin verificar | — | ⚠️ Sin verificar |
 
 ### Tipografía
 
 | Recurso | Autor | Licencia |
 |---|---|---|
-| m6x11 (`m6x11.ttf`) | Daniel Linssen |  Pendiente de verificar (`docs/ASSETS.md` indica que falta confirmar la fuente exacta) |
+| m6x11 (`m6x11.ttf`) | Daniel Linssen | ⚠️ Pendiente de verificar (`docs/ASSETS.md` indica que falta confirmar la fuente exacta) |
 
 ### Música
 
 | Archivo | Uso | Fuente y licencia |
 |---|---|---|
-| `menu_sound.mp3` | Menú principal |  Sin verificar (`docs/ASSETS.md`) |
-| `suspenseful.mp3` | Partida (se acelera con la presión del caso) |  Sin verificar (`docs/ASSETS.md`) |
-| `rest_sound.mp3` | Dificultad, introducción, pausa, interrogatorios y resultados |  Sin verificar (`docs/ASSETS.md`) |
+| `menu_sound.mp3` | Menú principal | ⚠️ Sin verificar (`docs/ASSETS.md`) |
+| `suspenseful.mp3` | Partida (se acelera con la presión del caso) | ⚠️ Sin verificar (`docs/ASSETS.md`) |
+| `rest_sound.mp3` | Dificultad, introducción, pausa, interrogatorios y resultados | ⚠️ Sin verificar (`docs/ASSETS.md`) |
 
 ### Efectos de sonido
 
@@ -372,11 +487,11 @@ node scripts/generate-effects.mjs
 
 [Phaser](https://phaser.io/) · [Vite](https://vite.dev/) · [Node.js](https://nodejs.org/)
 
->  Los recursos marcados con  aún no tienen autor ni licencia confirmados. Deben verificarse antes de publicar o distribuir el juego.
+> ⚠️ Los recursos marcados aún no tienen autor ni licencia confirmados. Deben verificarse antes de distribuir el juego.
 
 ---
 
-## Equipo de desarrollo
+## 👥 Equipo de desarrollo
 
 Información obtenida del historial de Git del repositorio.
 
@@ -385,11 +500,11 @@ Información obtenida del historial de Git del repositorio.
 | **Dumdum** · [@CelesteLascano017](https://github.com/CelesteLascano017) | Configuración inicial del proyecto, documentación de diseño y recursos gráficos; implementación del juego (escenas, sistemas, IA, interfaz y scripts de verificación); comentarios explicativos del código |
 | **Criowl / Cristhian C.** · [@CriOwl](https://github.com/CriOwl) | Traducción del juego al español; integración de música y efectos de sonido; barra de volumen; sistema de presión del caso (pruebas necesarias por dificultad); fusión de la rama `developer` (PR #1) |
 
-<sub>Proyecto final del primer término de la asignatura **Aplicaciones Web**.</sub>
+<sub>Proyecto final del primer bimestre de la asignatura **Aplicaciones Web** · Escuela Politécnica Nacional (EPN) · Docente: Jaime Sayago-Heredia.</sub>
 
 ---
 
-
+## 📌 Estado del proyecto
 
 ### Implementado
 
@@ -399,17 +514,22 @@ Información obtenida del historial de Git del repositorio.
 - Música, efectos, silencio y volumen persistentes
 - Español e inglés
 - Controles de teclado, ratón y táctiles
+- Despliegue público en <https://roro.daxrpm.dev>
 
 ### Limitaciones conocidas
 
-- **Gráficos provisionales.** No existen todavía imágenes para las puertas, los muebles de cocina y baño ni los retratos de diálogo (12 recursos opcionales). El juego dibuja sustitutos con contorno magenta, o reutiliza el sprite del personaje en el caso de los retratos. `npm run check-assets` lista las rutas esperadas.
+- **Gráficos provisionales.** No existen todavía imágenes para las puertas, los muebles de cocina y baño ni los retratos de diálogo (12 recursos opcionales). El juego dibuja sustitutos con contorno magenta (visibles en las capturas), o reutiliza el sprite del personaje en el caso de los retratos. `npm run check-assets` lista las rutas esperadas.
 - **Créditos incompletos.** Falta confirmar el origen y la licencia de la música, de los objetos de prueba, de la nota y de la fuente, y la licencia del tileset.
-- **Sin capturas de pantalla.** El repositorio aún no incluye capturas de pantalla.
+- **Video demo pendiente** de grabar y enlazar.
 - La animación de caminar de Roro continúa mientras empuja contra una pared.
 - El detective y Roro no colisionan entre sí; es intencionado, para que Roro no pueda bloquear su camino.
-- En pantallas verticales de móvil el juego se muestra pequeño, con franjas negras.
+- En pantallas verticales de móvil el juego se muestra pequeño, con franjas negras (se recomienda orientación horizontal).
 - El equilibrio de la dificultad (tiempos, rango de visión, enfriamiento de la tetera) no se ha ajustado con pruebas de juego de jugadores reales.
 - `package.json` declara la licencia `ISC`, pero el repositorio no incluye un archivo `LICENSE`.
+
+### Mejoras futuras
+
+Sustituir los gráficos provisionales, completar los créditos, añadir más habitaciones o casos, y un *leaderboard* en línea.
 
 ---
 
