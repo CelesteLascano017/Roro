@@ -46,10 +46,12 @@ export class Minimap {
 
         const width = this.projection.width + PADDING * 2;
         const x = GAME_WIDTH - SCREEN_MARGIN - width - (touch ? TOUCH_SHIFT : 0);
-        this.container = scene.add.container(x, TOP).setScrollFactor(0, 0, true).setDepth(DEPTH.hud);
+        this.container = scene.add.container(x, TOP).setDepth(DEPTH.hud);
 
         this.header = scene.add.rectangle(0, 0, width, HEADER_HEIGHT, COLORS.panel, 0.9)
-            .setOrigin(0, 0).setStrokeStyle(2, COLORS.panelBorder);
+            .setOrigin(0, 0).setStrokeStyle(2, COLORS.panelBorder)
+            // La entrada usa el factor del propio objeto, no el de su contenedor.
+            .setScrollFactor(0);
         this.title = scene.add.text(width / 2, HEADER_HEIGHT / 2, t('MAP (N)'), textStyle({ color: COLORS.textMuted })).setOrigin(0.5);
         this.header.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer, localX, localY, event) => {
             event?.stopPropagation();
@@ -66,6 +68,7 @@ export class Minimap {
         this.body.add([this.highlight, this.doorGraphics, this.playerMarker, this.detectiveMarker]);
 
         this.container.add([this.header, this.title, this.body]);
+        this.container.setScrollFactor(0);
         this.applyExpanded();
     }
 
@@ -126,7 +129,7 @@ export class Minimap {
             return;
         }
         this.highlightKey = key;
-        this.highlight.clear().fillStyle(COLORS.accentHex, 0.28);
+        this.highlight.clear().fillStyle(COLORS.accentHex, 0.45);
         for (const roomId of rooms) {
             const rect = this.projection.roomRect(roomId);
             if (rect) {
