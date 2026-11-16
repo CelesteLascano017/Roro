@@ -472,6 +472,30 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3, 
     check('case atmosphere stays bounded', caseAtmosphere(0).intensity === 1 && caseAtmosphere(6).intensity === 0);
 }
 
+{
+    section('Minimap projection');
+    const { createMinimapProjection, getMinimapMarkers, MINIMAP_CELL } = await import('../src/world/minimapProjection.js');
+    const layout = new ApartmentLayout();
+    const projection = createMinimapProjection(layout);
+    const world = layout.getWorldSize();
+    check('minimap size is the grid scaled by the cell size', projection.width === layout.width * MINIMAP_CELL && projection.height === layout.height * MINIMAP_CELL);
+    const origin = projection.toMap({ x: 0, y: 0 });
+    const corner = projection.toMap({ x: world.width, y: world.height });
+    check('world corners map to minimap corners', origin.x === 0 && origin.y === 0 && corner.x === projection.width && corner.y === projection.height);
+    const outside = projection.toMap({ x: -500, y: world.height * 3 });
+    check('points outside the world are clamped inside the minimap', outside.x === 0 && outside.y === projection.height);
+    const bedroom = layout.getRoom('bedroom');
+    const bedroomRect = projection.roomRect('bedroom');
+    check('room rectangle follows the layout rectangle', bedroomRect.x === bedroom.rect.x * MINIMAP_CELL && bedroomRect.width === bedroom.rect.w * MINIMAP_CELL);
+    check('unknown room has no rectangle', projection.roomRect('nowhere') === null);
+    check('every door has a minimap rectangle', layout.doors.every((door) => projection.doorRect(door.id)?.width > 0));
+    const center = layout.tileCenter({ x: 5, y: 5 });
+    const both = getMinimapMarkers(projection, { player: center, detective: center, detectiveVisible: true });
+    check('visible detective is drawn after the player', both.length === 2 && both[0].kind === 'player' && both[1].kind === 'detective');
+    const hidden = getMinimapMarkers(projection, { player: center, detective: center, detectiveVisible: false });
+    check('hidden detective never leaks onto the minimap', hidden.length === 1 && hidden[0].kind === 'player');
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);
