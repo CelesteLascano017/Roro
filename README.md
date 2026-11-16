@@ -120,6 +120,7 @@ Cada prueba escondida suma **1 punto** (máximo **6**).
   El orden de los puntos se mezcla en cada partida y, tras cada una de las tres primeras rondas, **interroga a Roro**.
 - **Cuándo encuentra pruebas.** Cada escondite se registra **una sola vez**: un lugar ya revisado es seguro. Una prueba se descubre si está en el escondite que el detective registra o si está a la vista cerca de él mientras busca. Las pruebas que Roro lleva en las manos nunca se descubren.
 - **Presión del caso.** Cada prueba descubierta acerca al detective a la solución. Cuantas menos le faltan, más rápida suena la música y más intenso es el borde rojo de la pantalla.
+- **Minimapa.** En la esquina superior derecha muestra el plano del apartamento, la habitación de Roro, las puertas abiertas o cerradas y al detective **solo cuando el juego ya lo muestra** (en Normal y Difícil no revela su posición). No marca pruebas ni escondites. Se pliega con `N` o tocando su barra, y la preferencia se guarda.
 - **Distracción.** La tetera de la cocina silba tras unos segundos y atrae al detective. Al terminar de revisarla, vuelve exactamente al punto de su ruta donde lo dejó. Tiene un tiempo de espera de 30 s.
 - **Puertas.** Roro puede abrir y cerrar las puertas interiores. El detective abre las que encuentra cerradas en su camino.
 
@@ -150,6 +151,7 @@ Todas las funcionalidades de esta lista están implementadas en el código actua
 - Estados explícitos de cada prueba: *no encontrada*, *cargada*, *escondida* y *descubierta*
 - Puntuación derivada de los estados, que no puede contarse dos veces ni superar 6
 - Sistema de presión del caso según la dificultad
+- Minimapa plegable que respeta las reglas de visibilidad de cada dificultad
 
 </td>
 <td valign="top" width="50%">
@@ -264,6 +266,7 @@ Abre la dirección que muestra Vite en la terminal (por defecto, `http://localho
 | `W` `A` `S` `D` / `↑` `←` `↓` `→` | Mover a Roro |
 | `E` | Interactuar: recoger, esconder, recuperar, leer la nota, abrir/cerrar puertas, encender la tetera |
 | `Esc` | Pausar y reanudar |
+| `N` | Mostrar u ocultar el minimapa |
 | `M` | Activar o desactivar el sonido |
 | `W` / `S` o `↑` / `↓` | Navegar por los botones de los menús |
 | `Enter` / `Espacio` | Confirmar en los menús |
@@ -280,6 +283,7 @@ Aparecen automáticamente en dispositivos táctiles, o con `?touch` en la URL.
 | Cruceta `^` `v` `<` `>` (abajo a la izquierda) | Mover a Roro |
 | Botón **E** (abajo a la derecha) | Interactuar |
 | Botón **II** (arriba a la derecha) | Pausar |
+| Barra **MAPA** (arriba a la derecha) | Mostrar u ocultar el minimapa |
 | Toque en botones y en la barra de volumen | Igual que el clic del ratón |
 
 Las instrucciones también son visibles en el juego: la barra inferior de la partida y la opción **Cómo jugar** del menú principal.
@@ -316,12 +320,12 @@ Roro/
     │   ├── animationData.js    Definición de animaciones
     │   └── tilesetData.js      Regiones del tileset
     ├── scenes/                 Una escena de Phaser por pantalla del juego
-    ├── world/                  Modelo del apartamento y su renderizado
+    ├── world/                  Modelo del apartamento, su renderizado y la proyección del minimapa
     ├── physics/                Colisiones, navegación A* y detección de habitaciones
     ├── ai/                     Máquina de estados del detective
     ├── objects/                Personajes, puertas, pruebas, escondites y distracciones
     ├── managers/               Servicios: recursos, audio, guardado, idioma, pruebas, rutas, interacción, entrada
-    ├── ui/                     HUD, avisos, nota, diálogos, oscuridad, presión del caso, botones y controles táctiles
+    ├── ui/                     HUD, minimapa, avisos, nota, diálogos, oscuridad, presión del caso, botones y controles táctiles
     └── utils/                  Procesamiento de imágenes, aleatoriedad, eventos y atmósfera del caso
 ```
 
@@ -435,13 +439,14 @@ Las transiciones permitidas están en `DETECTIVE_TRANSITIONS` (`src/ai/Detective
 | IA avanzada (FSM + A* + recálculo de rutas) | ✅ |
 | Generación procedural (orden y ubicación aleatoria de rutas y pruebas) | ✅ |
 | Shader / efectos visuales (oscuridad, visibilidad circular, filtro rojo de presión) | ✅ (efectos de cámara y superposición, no *shaders* GLSL propios) |
+| Minimapa (plano en tiempo real, sin revelar al detective fuera de vista) | ✅ |
 | Sistema de inventario (un objeto cargado a la vez) | ✅ (básico) |
 
 ### Pruebas automáticas
 
 ```bash
 npm test
-# 185 passed, 0 failed · idiomas OK · audio OK
+# 199 passed, 0 failed · idiomas OK · audio OK
 ```
 
 ### Documentación de diseño
