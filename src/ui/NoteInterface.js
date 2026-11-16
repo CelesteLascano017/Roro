@@ -50,7 +50,9 @@ export class NoteInterface {
             .setDepth(DEPTH.modal)
             .setVisible(false);
 
+        // Solo captura clics mientras la nota esta abierta; oculta no debe bloquear el HUD.
         this.dim.setInteractive().on('pointerdown', () => this.close());
+        this.dim.disableInteractive();
         this.keys = scene.input.keyboard.addKeys('E,ESC,SPACE,ENTER');
     }
 
@@ -60,6 +62,7 @@ export class NoteInterface {
         this.container.setVisible(true).setAlpha(0);
         this.scene.tweens.add({ targets: this.container, alpha: 1, duration: 200 });
         this.isOpen = true;
+        this.dim.setInteractive();
         // Ignora la pulsacion de E que abrio la nota.
         Object.values(this.keys).forEach((key) => key.reset());
     }
@@ -79,6 +82,7 @@ export class NoteInterface {
             return;
         }
         this.isOpen = false;
+        this.dim.disableInteractive();
         this.container.setVisible(false);
         const callback = this.onClose;
         this.onClose = null;

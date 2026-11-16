@@ -20,6 +20,9 @@ export class MuteButton extends Phaser.GameObjects.Container {
             // Los hijos tambien necesitan factor de desplazamiento fijo; de otro modo,
             // sus areas de entrada se mueven con la camara.
             this.setScrollFactor(0, 0, true);
+            // setScrollFactor(..., true) omite hijos sin la propiedad propia; la entrada
+            // usa la del propio fondo, asi que se fija de forma explicita.
+            this.background.setScrollFactor(0);
         }
 
         this.background.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer, localX, localY, event) => {
