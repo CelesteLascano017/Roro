@@ -45,7 +45,7 @@ export class HUD {
         this.carryText = scene.add.text(12, GAME_HEIGHT - 28, '', TEXT_STYLES.hud);
         objects.push(this.carryText);
 
-        this.hintText = scene.add.text(GAME_WIDTH - 12, GAME_HEIGHT - 28, t('WASD: move   E: interact   ESC: pause   M: sound'), textStyle({ color: COLORS.textMuted, stroke: '#000000', strokeThickness: 4 })).setOrigin(1, 0);
+        this.hintText = scene.add.text(GAME_WIDTH - 12, GAME_HEIGHT - 28, t('WASD: move   E: interact   N: map   ESC: pause   M: sound'), textStyle({ color: COLORS.textMuted, stroke: '#000000', strokeThickness: 4 })).setOrigin(1, 0);
         objects.push(this.hintText);
 
         this.messageText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 78, '', textStyle({

@@ -39,6 +39,7 @@ import { EvidenceItem } from '../objects/EvidenceItem.js';
 import { HidingSpot } from '../objects/HidingSpot.js';
 import { DistractionSource } from '../objects/DistractionSource.js';
 import { HUD } from '../ui/HUD.js';
+import { Minimap } from '../ui/Minimap.js';
 import { CasePressureOverlay } from '../ui/CasePressureOverlay.js';
 import { caseAtmosphere } from '../utils/caseAtmosphere.js';
 import { InteractionPrompt } from '../ui/InteractionPrompt.js';
@@ -200,6 +201,7 @@ export class ApartmentScene extends Phaser.Scene {
         this.visibility = new VisibilityOverlay(this, this.layout, this.difficultySettings);
         this.casePressure = new CasePressureOverlay(this);
         const touch = TouchControls.isSupported(this);
+        this.minimap = new Minimap(this, this.layout, { touch });
         if (touch) {
             this.touchControls = new TouchControls(this, this.inputManager);
         }
@@ -303,7 +305,18 @@ export class ApartmentScene extends Phaser.Scene {
         const roroPosition = this.roro.getFootPosition();
         this.interaction.update(roroPosition, this.inputManager.consumeInteract());
         this.visibility.update(roroPosition, this.roomTriggers.getLocation(this.roro));
-        this.detective.setVisibleToPlayer(this.isDetectiveVisible());
+        const detectiveVisible = this.isDetectiveVisible();
+        this.detective.setVisibleToPlayer(detectiveVisible);
+        if (this.inputManager.consumeMapToggle()) {
+            this.minimap.toggle();
+        }
+        this.minimap.update({
+            player: roroPosition,
+            detective: this.detective.getFootPosition(),
+            detectiveVisible,
+            location: this.roomTriggers.getLocation(this.roro),
+            doors: this.doors
+        });
     }
 
     isDetectiveVisible() {

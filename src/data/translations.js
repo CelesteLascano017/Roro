@@ -47,7 +47,7 @@ export const SPANISH = {
     "E / Space / click >": "E / Espacio / clic >",
     "Arrows + Enter, or click": "Flechas + Enter, o clic",
     "MAP (N)": "MAPA (N)",
-    "WASD: move   E: interact   ESC: pause   M: sound": "WASD: mover   E: interactuar   ESC: pausa   M: sonido",
+    "WASD: move   E: interact   N: map   ESC: pause   M: sound": "WASD: mover   E: interactuar   N: mapa   ESC: pausa   M: sonido",
     "Carrying: nothing": "Llevas: nada",
     "Month six.": "Sexto mes.",
     "Name:": "Nombre:",
