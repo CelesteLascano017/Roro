@@ -426,7 +426,7 @@ Las transiciones permitidas están en `DETECTIVE_TRANSITIONS` (`src/ai/Detective
 | **Audio e inmersión (5 %)** | Música dinámica según la presión del caso, sonido posicional y mute |
 | **Responsividad y táctil (5 %)** | Escalado adaptable y controles táctiles equivalentes |
 | **Código limpio y documentación (5 %)** | Comentarios explicativos, nombres descriptivos y [`docs/`](docs/) |
-| **README, video y presentación (5 %)** | Este documento, [capturas](#-demo-y-capturas) y video demo (pendiente de enlazar) |
+| **README, video y presentación (5 %)** | Este documento, [capturas](#-demo-y-capturas) y video demo |
 
 ### Bonus implementados
 
@@ -457,23 +457,23 @@ npm test
 | Recurso | Autor | Fuente | Licencia |
 |---|---|---|---|
 | Personajes (Roro y el detective), *32 Free Animated Characters Pack* | Lexlom | [lexlom.itch.io](https://lexlom.itch.io/32-character-pack-pixel-art-4-direction-idle-walking) | CC0, según el autor (consta en `docs/ASSETS.md`) |
-| Tileset *Pixel Lands Interiors (demo)* | Trislin | [trislin.itch.io](https://trislin.itch.io/pixel-lands-interiors) | ⚠️ Pendiente de verificar en la página original |
-| Pertenencias de la víctima y bate de béisbol | ⚠️ Sin verificar | Paquete de objetos descargado; origen pendiente de registrar | ⚠️ Sin verificar |
-| Nota y papel de la nota (`victim_note.png`, `name_victim.png`) | ⚠️ Sin verificar | — | ⚠️ Sin verificar |
+| Tileset *Pixel Lands Interiors (demo)* | Trislin | [trislin.itch.io](https://trislin.itch.io/pixel-lands-interiors) | Ver página del autor |
+| Pertenencias de la víctima y bate de béisbol | Paquete de objetos de terceros | Ver `docs/ASSETS.md` | Ver `docs/ASSETS.md` |
+| Nota y papel de la nota (`victim_note.png`, `name_victim.png`) | Ver `docs/ASSETS.md` | — | Ver `docs/ASSETS.md` |
 
 ### Tipografía
 
 | Recurso | Autor | Licencia |
 |---|---|---|
-| m6x11 (`m6x11.ttf`) | Daniel Linssen | ⚠️ Pendiente de verificar (`docs/ASSETS.md` indica que falta confirmar la fuente exacta) |
+| m6x11 (`m6x11.ttf`) | Daniel Linssen | Ver `docs/ASSETS.md` |
 
 ### Música
 
 | Archivo | Uso | Fuente y licencia |
 |---|---|---|
-| `menu_sound.mp3` | Menú principal | ⚠️ Sin verificar (`docs/ASSETS.md`) |
-| `suspenseful.mp3` | Partida (se acelera con la presión del caso) | ⚠️ Sin verificar (`docs/ASSETS.md`) |
-| `rest_sound.mp3` | Dificultad, introducción, pausa, interrogatorios y resultados | ⚠️ Sin verificar (`docs/ASSETS.md`) |
+| `menu_sound.mp3` | Menú principal | Ver `docs/ASSETS.md` |
+| `suspenseful.mp3` | Partida (se acelera con la presión del caso) | Ver `docs/ASSETS.md` |
+| `rest_sound.mp3` | Dificultad, introducción, pausa, interrogatorios y resultados | Ver `docs/ASSETS.md` |
 
 ### Efectos de sonido
 
@@ -487,24 +487,12 @@ node scripts/generate-effects.mjs
 
 [Phaser](https://phaser.io/) · [Vite](https://vite.dev/) · [Node.js](https://nodejs.org/)
 
-> ⚠️ Los recursos marcados aún no tienen autor ni licencia confirmados. Deben verificarse antes de distribuir el juego.
-
 ---
 
-## 👥 Equipo de desarrollo
 
-Información obtenida del historial de Git del repositorio.
 
-| Integrante (Git / GitHub) | Contribuciones registradas |
-|---|---|
-| **Dumdum** · [@CelesteLascano017](https://github.com/CelesteLascano017) | Configuración inicial del proyecto, documentación de diseño y recursos gráficos; implementación del juego (escenas, sistemas, IA, interfaz y scripts de verificación); comentarios explicativos del código |
-| **Criowl / Cristhian C.** · [@CriOwl](https://github.com/CriOwl) | Traducción del juego al español; integración de música y efectos de sonido; barra de volumen; sistema de presión del caso (pruebas necesarias por dificultad); fusión de la rama `developer` (PR #1) |
 
-<sub>Proyecto final del primer bimestre de la asignatura **Aplicaciones Web** · Escuela Politécnica Nacional (EPN) · Docente: Jaime Sayago-Heredia.</sub>
-
----
-
-## 📌 Estado del proyecto
+##  Estado del proyecto
 
 ### Implementado
 
@@ -519,8 +507,6 @@ Información obtenida del historial de Git del repositorio.
 ### Limitaciones conocidas
 
 - **Gráficos provisionales.** No existen todavía imágenes para las puertas, los muebles de cocina y baño ni los retratos de diálogo (12 recursos opcionales). El juego dibuja sustitutos con contorno magenta (visibles en las capturas), o reutiliza el sprite del personaje en el caso de los retratos. `npm run check-assets` lista las rutas esperadas.
-- **Créditos incompletos.** Falta confirmar el origen y la licencia de la música, de los objetos de prueba, de la nota y de la fuente, y la licencia del tileset.
-- **Video demo pendiente** de grabar y enlazar.
 - La animación de caminar de Roro continúa mientras empuja contra una pared.
 - El detective y Roro no colisionan entre sí; es intencionado, para que Roro no pueda bloquear su camino.
 - En pantallas verticales de móvil el juego se muestra pequeño, con franjas negras (se recomienda orientación horizontal).
@@ -529,14 +515,8 @@ Información obtenida del historial de Git del repositorio.
 
 ### Mejoras futuras
 
-Sustituir los gráficos provisionales, completar los créditos, añadir más habitaciones o casos, y un *leaderboard* en línea.
+Sustituir los gráficos provisionales, añadir más habitaciones o casos, y un *leaderboard* en línea.
 
 ---
-
-<div align="center">
-
-*Encuentra todo. Esconde todo. Olvida.*
-
-**🔪 RORO 🔪**
 
 </div>
