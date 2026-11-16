@@ -496,6 +496,25 @@ function createSimulation({ rules = HIDING_RULES, prepare = () => {}, seed = 3, 
     check('hidden detective never leaks onto the minimap', hidden.length === 1 && hidden[0].kind === 'player');
 }
 
+{
+    section('Minimap preference storage');
+    const store = new Map();
+    globalThis.window = { localStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) } };
+    const { SaveManager } = await import('../src/managers/SaveManager.js?minimap');
+    check('minimap is visible by default', SaveManager.isMinimapVisible() === true);
+    SaveManager.setMinimapVisible(false);
+    check('hiding the minimap is remembered', SaveManager.isMinimapVisible() === false);
+    check('preference is written to localStorage', JSON.parse([...store.values()][0]).minimapVisible === false);
+    check('reload reads the saved preference', SaveManager.load().minimapVisible === false);
+    store.set([...store.keys()][0], JSON.stringify({ highScore: 4 }));
+    check('older saves without the field default to visible', SaveManager.load().minimapVisible === true && SaveManager.load().highScore === 4);
+    globalThis.window = { localStorage: { getItem() { throw new Error('Blocked'); }, setItem() { throw new Error('Blocked'); } } };
+    let threw = false;
+    try { SaveManager.setMinimapVisible(true); } catch { threw = true; }
+    check('blocked storage does not break the toggle', !threw && SaveManager.isMinimapVisible() === true);
+    delete globalThis.window;
+}
+
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

@@ -3,8 +3,8 @@ import { AUDIO_DEFAULTS, DEFAULT_DIFFICULTY, DIFFICULTY, STORAGE_KEY } from '../
 /**
  * Persistencia mediante localStorage.
  *
- * Solo guarda datos duraderos: records, nivel alcanzado, ultima dificultad y
- * audio. No conserva partidas en curso; reiniciar crea un departamento limpio.
+ * Solo guarda datos duraderos: records, nivel alcanzado, ultima dificultad,
+ * audio y visibilidad del minimapa. No conserva partidas en curso; reiniciar crea un departamento limpio.
  *
  * Todos los accesos usan try/catch porque el almacenamiento puede estar bloqueado
  * o no disponible. El juego sigue funcionando sin el.
@@ -20,7 +20,9 @@ function createDefaultData() {
         gamesPlayed: 0,
         gamesWon: 0,
         lastDifficulty: DEFAULT_DIFFICULTY,
-        audio: { ...AUDIO_DEFAULTS }
+        audio: { ...AUDIO_DEFAULTS },
+        // Preferencia de interfaz: minimapa visible durante la partida.
+        minimapVisible: true
     };
 }
 
@@ -99,6 +101,15 @@ class SaveManagerClass {
         }
         this.save();
         return { newHighScore };
+    }
+
+    isMinimapVisible() {
+        return this.data.minimapVisible !== false;
+    }
+
+    setMinimapVisible(visible) {
+        this.data.minimapVisible = Boolean(visible);
+        this.save();
     }
 
     getAudioSettings() {
