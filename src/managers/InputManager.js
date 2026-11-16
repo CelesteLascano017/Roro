@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 /**
- * Entrada de una escena de juego. Combina teclado (WASD, flechas, E y ESC) y
+ * Entrada de una escena de juego. Combina teclado (WASD, flechas, E, N y ESC) y
  * controles tactiles opcionales mediante una interfaz comun; Roro no necesita
  * conocer el origen de la entrada.
  */
@@ -20,7 +20,8 @@ export class InputManager {
             leftArrow: codes.LEFT,
             rightArrow: codes.RIGHT,
             interact: codes.E,
-            pause: codes.ESC
+            pause: codes.ESC,
+            map: codes.N
         });
         // TouchControls escribe el estado de la entrada tactil.
         this.touch = { up: false, down: false, left: false, right: false };
@@ -59,6 +60,11 @@ export class InputManager {
         const pressed = Phaser.Input.Keyboard.JustDown(this.keys.pause) || this.touchPauseQueued;
         this.touchPauseQueued = false;
         return pressed;
+    }
+
+    /** Devuelve true una vez por pulsacion de N (mostrar u ocultar el minimapa). */
+    consumeMapToggle() {
+        return Phaser.Input.Keyboard.JustDown(this.keys.map);
     }
 
     setEnabled(enabled) {
